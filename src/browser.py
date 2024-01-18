@@ -61,11 +61,21 @@ class Browser:
         options = webdriver.ChromeOptions()
         options.headless = self.headless
         options.add_argument(f"--lang={self.localeLang}")
-        options.add_argument("--log-level=3")
 
+        # Reduzindo argumentos desnecessários
         options.add_argument("--ignore-certificate-errors")
-        options.add_argument("--ignore-certificate-errors-spki-list")
         options.add_argument("--ignore-ssl-errors")
+
+        # Monitorar e ajustar conforme necessário
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-setuid-sandbox")
+        options.add_argument("--disable-accelerated-2d-canvas")
+        options.add_argument("--no-first-run")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-popup-blocking")
 
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
@@ -94,8 +104,8 @@ class Browser:
                 deviceHeight = random.randint(568, 1024)
                 deviceWidth = random.randint(320, min(576, int(deviceHeight * 0.7)))
             else:
-                deviceWidth = random.randint(1024, 2560)
-                deviceHeight = random.randint(768, min(1440, int(deviceWidth * 0.8)))
+                deviceWidth = random.randint(1024, 1366)
+                deviceHeight = random.randint(768, 960)
             self.browserConfig["sizes"] = {
                 "height": deviceHeight,
                 "width": deviceWidth,
