@@ -35,7 +35,14 @@ def main():
     args = argumentParser()
     notifier = Notifier(args)
     setupLogging(args.verbosenotifs, notifier)
+    setupLogging(args.verbosenotifs, notifier)
     loadedAccounts = setupAccounts()
+    # Register the cleanup function to be called on script exit
+    atexit.register(cleanupChromeProcesses)
+
+    # Load previous day's points data
+    previous_points_data = load_previous_points_data()
+
     # Register the cleanup function to be called on script exit
     atexit.register(cleanupChromeProcesses)
 

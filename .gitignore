@@ -190,3 +190,6 @@ accounts copy 2.json
 rewards_script.sh
 >>>>>>> Stashed changes
 accounts with email.json
+
+runbot.bat
+.DS_Store
