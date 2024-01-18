@@ -16,12 +16,14 @@ class Login:
 
     def login(self):
         logging.info("[LOGIN] " + "Logging-in...")
-        self.webdriver.get("https://login.live.com/")
+        self.webdriver.get(
+            "https://rewards.bing.com/Signin/"
+        )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
         alreadyLoggedIn = False
         while True:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 0.1
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 0.1
                 )
                 alreadyLoggedIn = True
                 break
@@ -34,7 +36,8 @@ class Login:
                         continue
 
         if not alreadyLoggedIn:
-            self.executeLogin()
+            if isLocked := self.executeLogin():
+                return "Locked"
         self.utils.tryDismissCookieBanner()
 
         logging.info("[LOGIN] " + "Logged-in !")
@@ -42,14 +45,14 @@ class Login:
         self.utils.goHome()
         points = self.utils.getAccountPoints()
 
-        logging.info("[LOGIN] " + "Ensuring login on Bing...")
+        logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
         self.checkBingLogin()
         logging.info("[LOGIN] Logged-in successfully !")
         return points
 
     def executeLogin(self):
         self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
-        logging.info("[LOGIN] " + "Writing email...")
+        logging.info("[LOGIN] " + "Entering email...")
         self.webdriver.find_element(By.NAME, "loginfmt").send_keys(
             self.browser.username
         )
@@ -57,21 +60,26 @@ class Login:
 
         try:
             self.enterPassword(self.browser.password)
+            time.sleep(5)
+            self.webdriver.get("https://account.microsoft.com/")
         except Exception:  # pylint: disable=broad-except
-            logging.error("[LOGIN] " + "2FA required !")
+            logging.error("[LOGIN] " + "2FA Code required !")
             with contextlib.suppress(Exception):
                 code = self.webdriver.find_element(
                     By.ID, "idRemoteNGC_DisplaySign"
                 ).get_attribute("innerHTML")
-                logging.error("[LOGIN] " + f"2FA code: {code}")
-            logging.info("[LOGIN] Press enter when confirmed...")
-            input()
+                logging.error(f"[LOGIN] 2FA code: {code}")
+            logging.info("[LOGIN] Press enter when confirmed on your device...")
+            # input()
 
         while not (
             urllib.parse.urlparse(self.webdriver.current_url).path == "/"
             and urllib.parse.urlparse(self.webdriver.current_url).hostname
             == "account.microsoft.com"
         ):
+            if "Abuse" in str(self.webdriver.current_url):
+                logging.error(f"[LOGIN] {self.browser.username} is locked")
+                return True
             self.utils.tryDismissAllMessages()
             time.sleep(1)
 

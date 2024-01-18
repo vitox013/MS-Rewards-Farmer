@@ -1,7 +1,6 @@
 import contextlib
 import logging
 import random
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +16,7 @@ class Browser:
     """WebDriver wrapper class."""
 
     def __init__(self, mobile: bool, account, args: Any) -> None:
+        # Initialize browser instance
         self.mobile = mobile
         self.browserType = "mobile" if mobile else "desktop"
         self.headless = not args.visible
@@ -45,17 +45,19 @@ class Browser:
         return self
 
     def __exit__(self, *args: Any) -> None:
+        # Cleanup actions when exiting the browser context
         self.closeBrowser()
 
     def closeBrowser(self) -> None:
         """Perform actions to close the browser cleanly."""
-        # close web browser
+        # Close the web browser
         with contextlib.suppress(Exception):
             self.webdriver.quit()
 
     def browserSetup(
         self,
     ) -> WebDriver:
+        # Configure and setup the Chrome browser
         options = webdriver.ChromeOptions()
         options.headless = self.headless
         options.add_argument(f"--lang={self.localeLang}")
@@ -68,6 +70,7 @@ class Browser:
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
         if self.proxy:
+            # Setup proxy if provided
             seleniumwireOptions["proxy"] = {
                 "http": self.proxy,
                 "https": self.proxy,
@@ -161,8 +164,10 @@ class Browser:
         parent = currentPath.parent.parent
         sessionsDir = parent / "sessions"
 
-        sessionUuid = uuid.uuid5(uuid.NAMESPACE_DNS, self.username)
-        sessionsDir = sessionsDir / str(sessionUuid) / self.browserType
+        # Concatenate username and browser type for a plain text session ID
+        sessionid = f"{self.username}"
+
+        sessionsDir = sessionsDir / sessionid
         sessionsDir.mkdir(parents=True, exist_ok=True)
         return sessionsDir
 
