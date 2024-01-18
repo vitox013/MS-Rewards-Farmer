@@ -60,6 +60,8 @@ class Login:
 
         try:
             self.enterPassword(self.browser.password)
+            time.sleep(5)
+            self.webdriver.get("https://account.microsoft.com/")
         except Exception:  # pylint: disable=broad-except
             logging.error("[LOGIN] " + "2FA Code required !")
             with contextlib.suppress(Exception):
