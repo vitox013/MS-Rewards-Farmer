@@ -59,7 +59,8 @@ class Browser:
     ) -> WebDriver:
         # Configure and setup the Chrome browser
         options = webdriver.ChromeOptions()
-        options.headless = self.headless
+        # options.headless = self.headless
+        options.headless = False
         options.add_argument(f"--lang={self.localeLang}")
 
         # Reduzindo argumentos desnecessários

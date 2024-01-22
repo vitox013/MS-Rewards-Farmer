@@ -7,6 +7,7 @@ import urllib.parse
 from pathlib import Path
 
 import requests
+import selenium.common.exceptions as selenium_exceptions
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -117,10 +118,24 @@ class Utils:
         reloadThreshold = 5
         reloadInterval = 10
         targetUrl = urllib.parse.urlparse(BASE_URL)
-        self.webdriver.get(BASE_URL)
         reloads = 0
         interval = 1
         intervalCount = 0
+
+        while True:
+            try:
+                self.webdriver.get(BASE_URL)
+            except selenium_exceptions.TimeoutException as e:
+                print(f"TimeoutException: {e}")
+                time.sleep(5)
+                reloads += 1
+                if reloads >= reloadThreshold:
+                    break  # Sai do loop se atingir o limite de recarregamentos
+                continue  # Tenta novamente o loop
+            else:
+                # O bloco 'else' será executado apenas se o 'try' for bem-sucedido
+                break  # Sai do loop se a navegação for bem-sucedida
+
         while True:
             self.tryDismissCookieBanner()
             with contextlib.suppress(Exception):

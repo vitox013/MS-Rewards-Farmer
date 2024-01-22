@@ -7,6 +7,7 @@ import logging.handlers as handlers
 import random
 import re
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -35,7 +36,6 @@ def main():
     args = argumentParser()
     notifier = Notifier(args)
     setupLogging(args.verbosenotifs, notifier)
-    setupLogging(args.verbosenotifs, notifier)
     loadedAccounts = setupAccounts()
     # Register the cleanup function to be called on script exit
     atexit.register(cleanupChromeProcesses)
@@ -43,31 +43,19 @@ def main():
     # Load previous day's points data
     previous_points_data = load_previous_points_data()
 
-    # Register the cleanup function to be called on script exit
-    atexit.register(cleanupChromeProcesses)
-
-    # Load previous day's points data
-    previous_points_data = load_previous_points_data()
+    threads = []
 
     for currentAccount in loadedAccounts:
-        try:
-            earned_points = executeBot(currentAccount, notifier, args)
-            account_name = currentAccount.get("username", "")
-            previous_points = previous_points_data.get(account_name, 0)
+        thread = threading.Thread(
+            target=process_account,
+            args=(currentAccount, notifier, args, previous_points_data),
+        )
+        threads.append(thread)
+        thread.start()
 
-            # Calculate the difference in points from the prior day
-            points_difference = earned_points - previous_points
-
-            # Append the daily points and points difference to CSV and Excel
-            log_daily_points_to_csv(account_name, earned_points, points_difference)
-
-            # Update the previous day's points data
-            previous_points_data[account_name] = earned_points
-
-            logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
-        except Exception as e:
-            notifier.send("⚠️ Error occurred, please check the log", currentAccount)
-            logging.exception(f"{e.__class__.__name__}: {e}")
+    # Wait for all threads to complete before proceeding
+    for thread in threads:
+        thread.join()
 
     # Save the current day's points data for the next day in the "logs" folder
     save_previous_points_data(previous_points_data)
@@ -337,6 +325,27 @@ def save_previous_points_data(data):
     logs_directory = Path(__file__).resolve().parent / "logs"
     with open(logs_directory / "previous_points_data.json", "w") as file:
         json.dump(data, file, indent=4)
+
+
+def process_account(currentAccount, notifier, args, previous_points_data):
+    try:
+        earned_points = executeBot(currentAccount, notifier, args)
+        account_name = currentAccount.get("username", "")
+        previous_points = previous_points_data.get(account_name, 0)
+
+        # Calculate the difference in points from the prior day
+        points_difference = earned_points - previous_points
+
+        # Append the daily points and points difference to CSV and Excel
+        log_daily_points_to_csv(account_name, earned_points, points_difference)
+
+        # Update the previous day's points data
+        previous_points_data[account_name] = earned_points
+
+        logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
+    except Exception as e:
+        notifier.send("⚠️ Error occurred, please check the log", currentAccount)
+        logging.exception(f"{e.__class__.__name__}: {e}")
 
 
 if __name__ == "__main__":
