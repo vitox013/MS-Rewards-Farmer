@@ -193,3 +193,5 @@ accounts with email.json
 
 runbot.bat
 .DS_Store
+accounts.json.sample
+accounts-backup.json

@@ -52,6 +52,7 @@ def main():
         )
         threads.append(thread)
         thread.start()
+        time.sleep(60)
 
     # Wait for all threads to complete before proceeding
     for thread in threads:

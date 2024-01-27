@@ -61,6 +61,8 @@ class Searches:
         search_terms = self.getGoogleTrends(numberOfSearches)
         self.webdriver.get("https://bing.com")
 
+        random.shuffle(search_terms)
+
         i = 0
         for word in search_terms:
             i += 1
