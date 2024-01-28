@@ -36,7 +36,6 @@ def main():
     args = argumentParser()
     notifier = Notifier(args)
     setupLogging(args.verbosenotifs, notifier)
-    loadedAccounts = setupAccounts()
     # Register the cleanup function to be called on script exit
     atexit.register(cleanupChromeProcesses)
 
@@ -45,22 +44,68 @@ def main():
 
     threads = []
 
-    for currentAccount in loadedAccounts:
+    loadedAccounts = setupAccounts()
+
+    # Inicialize suas listas
+    loadedAccounts1, loadedAccounts2, loadedAccounts3 = [], [], []
+
+    # Distribua as contas nas listas correspondentes
+    for conta in loadedAccounts:
+        adicionar_conta_se_nao_existir(
+            conta, loadedAccounts1, [loadedAccounts2, loadedAccounts3]
+        )
+        adicionar_conta_se_nao_existir(
+            conta, loadedAccounts2, [loadedAccounts1, loadedAccounts3]
+        )
+        adicionar_conta_se_nao_existir(
+            conta, loadedAccounts3, [loadedAccounts1, loadedAccounts2]
+        )
+
+    # Processa as contas em loadedAccounts1
+    for currentAccount in loadedAccounts1:
         thread = threading.Thread(
             target=process_account,
             args=(currentAccount, notifier, args, previous_points_data),
         )
         threads.append(thread)
         thread.start()
-        time.sleep(60)
+        time.sleep(10)
 
-    # Wait for all threads to complete before proceeding
+    # Aguarda todas as threads de loadedAccounts1 concluírem
+    for thread in threads:
+        thread.join()
+
+    # Limpa a lista de threads para o próximo lote
+    threads = []
+
+    # Processa as contas em loadedAccounts2
+    for currentAccount in loadedAccounts2:
+        thread = threading.Thread(
+            target=process_account,
+            args=(currentAccount, notifier, args, previous_points_data),
+        )
+        threads.append(thread)
+        thread.start()
+        time.sleep(10)
+
+    # Aguarda todas as threads de loadedAccounts2 concluírem
     for thread in threads:
         thread.join()
 
     # Save the current day's points data for the next day in the "logs" folder
     save_previous_points_data(previous_points_data)
     logging.info("[POINTS] Data saved for the next day.")
+
+
+def adicionar_conta_se_nao_existir(conta, lista, outras_listas):
+    for item in lista:
+        if conta["proxy"] == item["proxy"]:
+            return
+    for outra_lista in outras_listas:
+        for item in outra_lista:
+            if conta["username"] == item["username"]:
+                return
+    lista.append(conta)
 
 
 def log_daily_points_to_csv(date, earned_points, points_difference):
