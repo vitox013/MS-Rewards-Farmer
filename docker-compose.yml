@@ -1,0 +1,10 @@
+services:
+  rewards-farmer:
+    image: ms-rewards-ok:0
+    container_name: ms-reward-farmer
+    shm_size: 8gb
+    volumes:
+      - ./accounts.json:/app/accounts.json
+      - ./tmp:/app/tmp
+      - ./logs:/app/logs
+    restart: 'no'

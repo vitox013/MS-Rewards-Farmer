@@ -180,18 +180,18 @@ pyrightconfig.json
 
 accounts.json
 sessions
-<<<<<<< Updated upstream
 logs
-=======
 logs
 runbot.bat
 .DS_Store
 accounts copy 2.json
 rewards_script.sh
->>>>>>> Stashed changes
 accounts with email.json
 
 runbot.bat
 .DS_Store
 accounts.json.sample
 accounts-backup.json
+Dockerfile  3
+Dockerfile FUNCIONAL
+Dockerfile copy 2

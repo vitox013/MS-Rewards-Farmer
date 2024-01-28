@@ -70,6 +70,8 @@ class Login:
                 ).get_attribute("innerHTML")
                 logging.error(f"[LOGIN] 2FA code: {code}")
             logging.info("[LOGIN] Press enter when confirmed on your device...")
+            time.sleep(5)
+            self.webdriver.get("https://account.microsoft.com/")
             # input()
 
         while not (
