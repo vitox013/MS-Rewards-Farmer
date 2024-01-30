@@ -61,7 +61,7 @@ class Login:
         try:
             self.enterPassword(self.browser.password)
             time.sleep(5)
-            self.webdriver.get("https://account.microsoft.com/")
+            self.utils.tryDismissAllMessages()
         except Exception:  # pylint: disable=broad-except
             logging.error("[LOGIN] " + "2FA Code required !")
             with contextlib.suppress(Exception):
@@ -73,21 +73,6 @@ class Login:
             time.sleep(5)
             self.webdriver.get("https://account.microsoft.com/")
             # input()
-
-        while not (
-            urllib.parse.urlparse(self.webdriver.current_url).path == "/"
-            and urllib.parse.urlparse(self.webdriver.current_url).hostname
-            == "account.microsoft.com"
-        ):
-            if "Abuse" in str(self.webdriver.current_url):
-                logging.error(f"[LOGIN] {self.browser.username} is locked")
-                return True
-            self.utils.tryDismissAllMessages()
-            time.sleep(1)
-
-        self.utils.waitUntilVisible(
-            By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 10
-        )
 
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)

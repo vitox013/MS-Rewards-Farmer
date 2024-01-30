@@ -210,6 +210,7 @@ class Utils:
     def tryDismissAllMessages(self):
         # Try to dismiss various messages using different buttons
         buttons = [
+            (By.ID, "declineButton"),
             (By.ID, "iLandingViewAction"),
             (By.ID, "iShowSkip"),
             (By.ID, "iNext"),
