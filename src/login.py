@@ -40,6 +40,11 @@ class Login:
                 return "Locked"
         self.utils.tryDismissCookieBanner()
 
+        try:
+            self.webdriver.get("https://account.microsoft.com/")
+        except:
+            pass
+
         logging.info("[LOGIN] " + "Logged-in !")
 
         self.utils.goHome()
@@ -60,19 +65,11 @@ class Login:
 
         try:
             self.enterPassword(self.browser.password)
-            time.sleep(5)
+            time.sleep(2)
             self.utils.tryDismissAllMessages()
-        except Exception:  # pylint: disable=broad-except
-            logging.error("[LOGIN] " + "2FA Code required !")
-            with contextlib.suppress(Exception):
-                code = self.webdriver.find_element(
-                    By.ID, "idRemoteNGC_DisplaySign"
-                ).get_attribute("innerHTML")
-                logging.error(f"[LOGIN] 2FA code: {code}")
-            logging.info("[LOGIN] Press enter when confirmed on your device...")
             time.sleep(5)
-            self.webdriver.get("https://account.microsoft.com/")
-            # input()
+        except Exception:  # pylint: disable=broad-except
+            logging.error("[ERROR] Erro ao logar")
 
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)

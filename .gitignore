@@ -179,9 +179,10 @@ pyrightconfig.json
 # Custom rules (everything added below won't be overridden by 'Generate .gitignore File' if you use 'Update' option)
 
 accounts.json
+accountscopy.json
 sessions
 logs
-logs
+logs*
 runbot.bat
 .DS_Store
 accounts copy 2.json
@@ -192,6 +193,10 @@ runbot.bat
 .DS_Store
 accounts.json.sample
 accounts-backup.json
+Dockerfile
 Dockerfile  3
 Dockerfile FUNCIONAL
 Dockerfile copy 2
+.venv
+.devcontainer/
+*json

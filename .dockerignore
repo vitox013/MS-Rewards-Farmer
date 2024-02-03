@@ -8,3 +8,5 @@ accounts.json.sample
 .gitignore
 Dockerfile*
 docker-compose.yml
+.venv
+.devcontainer
