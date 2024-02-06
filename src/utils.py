@@ -217,6 +217,7 @@ class Utils:
             (By.ID, "iLooksGood"),
             (By.ID, "idSIButton9"),
             (By.CSS_SELECTOR, ".ms-Button.ms-Button--primary"),
+            (By.ID, "acceptButton"),
             (By.ID, "bnp_btn_accept"),
         ]
         result = False

@@ -46,49 +46,17 @@ def main():
 
     loadedAccounts = setupAccounts()
 
-    # Inicialize suas listas
-    loadedAccounts1, loadedAccounts2, loadedAccounts3 = [], [], []
-
-    # Distribua as contas nas listas correspondentes
-    for conta in loadedAccounts:
-        adicionar_conta_se_nao_existir(
-            conta, loadedAccounts1, [loadedAccounts2, loadedAccounts3]
-        )
-        adicionar_conta_se_nao_existir(
-            conta, loadedAccounts2, [loadedAccounts1, loadedAccounts3]
-        )
-        adicionar_conta_se_nao_existir(
-            conta, loadedAccounts3, [loadedAccounts1, loadedAccounts2]
-        )
-
     # Processa as contas em loadedAccounts1
-    for currentAccount in loadedAccounts1:
+    for currentAccount in loadedAccounts:
         thread = threading.Thread(
             target=process_account,
             args=(currentAccount, notifier, args, previous_points_data),
         )
         threads.append(thread)
         thread.start()
-        time.sleep(10)
+        time.sleep(30)
 
-    # Aguarda todas as threads de loadedAccounts1 concluírem
-    for thread in threads:
-        thread.join()
-
-    # Limpa a lista de threads para o próximo lote
-    threads = []
-
-    # Processa as contas em loadedAccounts2
-    for currentAccount in loadedAccounts2:
-        thread = threading.Thread(
-            target=process_account,
-            args=(currentAccount, notifier, args, previous_points_data),
-        )
-        threads.append(thread)
-        thread.start()
-        time.sleep(10)
-
-    # Aguarda todas as threads de loadedAccounts2 concluírem
+    # Aguarda todas as threads de loadedAccounts concluírem
     for thread in threads:
         thread.join()
 
