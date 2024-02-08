@@ -1,6 +1,7 @@
 import contextlib
 import json
 import locale as pylocale
+import logging
 import random
 import time
 import urllib.parse
@@ -166,7 +167,20 @@ class Utils:
 
     def getDashboardData(self) -> dict:
         # Get the dashboard data using JavaScript execution
-        return self.webdriver.execute_script("return dashboard")
+        time.sleep(5)
+        dashboard_data = None
+
+        while True:
+            try:
+                dashboard_data = self.webdriver.execute_script("return dashboard")
+                break
+            except Exception:  # pylint: disable=broad-except
+                self.webdriver.refresh()
+                logging.warning("[ERROR] Trying to get dashboard data")
+                time.sleep(30)
+                continue
+
+        return dashboard_data
 
     def getBingInfo(self):
         # Get Bing information using cookies
