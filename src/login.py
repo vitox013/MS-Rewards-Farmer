@@ -20,7 +20,8 @@ class Login:
             "https://rewards.bing.com/Signin/"
         )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
         alreadyLoggedIn = False
-        while True:
+        max_attempts = 5
+        for _ in range(max_attempts):
             try:
                 self.utils.waitUntilVisible(
                     By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 0.1
