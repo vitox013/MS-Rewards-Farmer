@@ -20,8 +20,7 @@ class Login:
             "https://rewards.bing.com/Signin/"
         )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
         alreadyLoggedIn = False
-        max_attempts = 5
-        for _ in range(max_attempts):
+        while True:
             try:
                 self.utils.waitUntilVisible(
                     By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 0.1
@@ -33,8 +32,10 @@ class Login:
                     self.utils.waitUntilVisible(By.ID, "loginHeader", 0.1)
                     break
                 except Exception:  # pylint: disable=broad-except
-                    if self.utils.tryDismissAllMessages():
-                        continue
+                    self.utils.tryDismissAllMessages()
+                    self.webdriver.get("https://rewards.bing.com/Signin/")
+                    time.sleep(5)
+                    continue
 
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():
@@ -64,16 +65,35 @@ class Login:
             if email_field.get_attribute("value") == self.browser.username:
                 self.webdriver.find_element(By.ID, "idSIButton9").click()
                 break
-            else:
-                email_field.clear()
+
+            email_field.clear()
 
         try:
             self.enterPassword(self.browser.password)
             time.sleep(5)
             self.utils.tryDismissAllMessages()
             time.sleep(5)
+            try:
+                self.webdriver.get("https://account.microsoft.com/")
+            except Exception:  # pylint: disable=broad-except
+                pass
         except Exception:  # pylint: disable=broad-except
             logging.error("[ERROR] Erro ao logar")
+
+        while not (
+            urllib.parse.urlparse(self.webdriver.current_url).path == "/"
+            and urllib.parse.urlparse(self.webdriver.current_url).hostname
+            == "account.microsoft.com"
+        ):
+            if "Abuse" in str(self.webdriver.current_url):
+                logging.error(f"[LOGIN] {self.browser.username} is locked")
+                return True
+            self.utils.tryDismissAllMessages()
+            time.sleep(1)
+
+        self.utils.waitUntilVisible(
+            By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
+        )
 
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)
