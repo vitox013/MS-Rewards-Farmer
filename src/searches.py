@@ -4,10 +4,15 @@ import random
 import time
 from datetime import date, timedelta
 
+import numpy as np
 import requests
+import unidecode  # Importe a biblioteca unidecode
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import silhouette_score
 
 from src.browser import Browser
 from src.utils import Utils
@@ -26,20 +31,62 @@ class Searches:
             i += 1
             # Fetching daily trends from Google Trends API
             r = requests.get(
-                f'https://trends.google.com/trends/api/dailytrends?hl={self.browser.localeLang}&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo={self.browser.localeGeo}&ns=15'
+                f'https://trends.google.com/trends/api/dailytrends?hl=pt-BR&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo=BR'
             )
             trends = json.loads(r.text[6:])
             for topic in trends["default"]["trendingSearchesDays"][0][
                 "trendingSearches"
             ]:
-                searchTerms.append(topic["title"]["query"].lower())
-                searchTerms.extend(
+                title_query = topic["title"]["query"].lower()
+                searchTerms.append(
+                    unidecode.unidecode(title_query)
+                )  # Normalize o termo
+                related_queries = [
                     relatedTopic["query"].lower()
                     for relatedTopic in topic["relatedQueries"]
-                )
-            searchTerms = list(set(searchTerms))
-        del searchTerms[wordsCount : (len(searchTerms) + 1)]
-        return searchTerms
+                ]
+                searchTerms.extend(
+                    unidecode.unidecode(related_query)
+                    for related_query in related_queries
+                )  # Normalize os termos relacionados
+
+        # Remover palavras únicas e com menos de 5 letras
+        searchTerms = [term for term in searchTerms if len(term) >= 5]
+
+        # Use TF-IDF to represent terms as vectors
+        vectorizer = TfidfVectorizer(stop_words="english")
+        X = vectorizer.fit_transform(searchTerms)
+
+        # Find optimal number of clusters
+        max_clusters = min(len(searchTerms), wordsCount)
+        best_score = -1
+        best_k = 2
+        for k in range(2, max_clusters + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            score = silhouette_score(X, kmeans.labels_)
+            if score > best_score:
+                best_score = score
+                best_k = k
+
+        # Cluster terms
+        kmeans = KMeans(n_clusters=best_k, random_state=42)
+        kmeans.fit(X)
+        cluster_labels = kmeans.labels_
+
+        # Selecionar um termo de cada cluster
+        selected_terms = []
+        cluster_centers = kmeans.cluster_centers_
+        for i in range(best_k):
+            cluster_indices = [
+                index for index, label in enumerate(cluster_labels) if label == i
+            ]
+            center_index = min(
+                cluster_indices, key=lambda x: np.linalg.norm(X[x] - cluster_centers[i])
+            )
+            selected_terms.append(searchTerms[center_index])
+
+        return selected_terms
 
     def getRelatedTerms(self, word: str) -> list:
         # Function to retrieve related terms from Bing API
@@ -92,7 +139,10 @@ class Searches:
                 self.browser.utils.waitUntilClickable(By.ID, "sb_form_q")
                 searchbar = self.webdriver.find_element(By.ID, "sb_form_q")
                 searchbar.clear()
-                searchbar.send_keys(word)
+                for char in word:
+                    searchbar.send_keys(char)
+                    delay = random.uniform(0.2, 1)
+                    time.sleep(delay)
                 searchbar.submit()
                 time.sleep(Utils.randomSeconds(100, 180))
 
@@ -102,7 +152,7 @@ class Searches:
                         "window.scrollTo(0, document.body.scrollHeight);"
                     )
                     time.sleep(
-                        Utils.randomSeconds(7, 10)
+                        Utils.randomSeconds(7, 15)
                     )  # Random wait between scrolls
 
                 return self.browser.utils.getBingAccountPoints()

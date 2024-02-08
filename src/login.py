@@ -40,18 +40,9 @@ class Login:
                 return "Locked"
         self.utils.tryDismissCookieBanner()
 
-        try:
-            self.webdriver.get("https://account.microsoft.com/")
-        except:
-            logging.error(
-                "[ERROR] [LOGIN] Erro ao ir para a página account.microsoft... Tentando continuar."
-            )
-            pass
-
-        self.utils.goHome()
-
         logging.info("[LOGIN] " + "Logged-in !")
 
+        self.utils.goHome()
         points = self.utils.getAccountPoints()
 
         logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
