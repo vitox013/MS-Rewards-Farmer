@@ -80,20 +80,25 @@ class Login:
         except Exception:  # pylint: disable=broad-except
             logging.error("[ERROR] Erro ao logar")
 
-        while not (
-            urllib.parse.urlparse(self.webdriver.current_url).path == "/"
-            and urllib.parse.urlparse(self.webdriver.current_url).hostname
-            == "account.microsoft.com"
-        ):
-            if "Abuse" in str(self.webdriver.current_url):
-                logging.error(f"[LOGIN] {self.browser.username} is locked")
-                return True
-            self.utils.tryDismissAllMessages()
-            time.sleep(1)
-
-        self.utils.waitUntilVisible(
-            By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
-        )
+        attempts = 0
+        while attempts < 5:
+            try:
+                self.utils.waitUntilVisible(
+                    By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
+                )
+                logging.info("[LOGIN] Acessado account.microsoft com sucesso")
+                break
+            except Exception:  # pylint: disable=broad-except
+                attempts += 1
+                logging.warning("[LOGIN] MeePortal não encontrado. Tentando novamente.")
+                try:
+                    self.webdriver.get("https://account.microsoft.com/")
+                except Exception:  # pylint: disable=broad-except
+                    pass
+        else:
+            logging.error(
+                "[LOGIN] Falha ao acessar account.microsoft após 5 tentativas. Continuando mesmo assim."
+            )
 
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)
