@@ -66,7 +66,7 @@ class Browser:
         # Reduzindo argumentos desnecessários
         options.add_argument("--ignore-certificate-errors")
         options.add_argument("--ignore-ssl-errors")
-
+        options.add_argument("--disable-notifications")
         # Monitorar e ajustar conforme necessário
         options.add_argument("--disable-extensions")
         options.add_argument("--disable-gpu")
@@ -91,7 +91,6 @@ class Browser:
         driver = webdriver.Chrome(
             options=options,
             seleniumwire_options=seleniumwireOptions,
-            driver_executable_path='/usr/bin/chromedriver',
             user_data_dir=self.userDataDir.as_posix(),
         )
 

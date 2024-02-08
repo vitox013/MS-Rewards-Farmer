@@ -22,6 +22,7 @@ class Searches:
     def __init__(self, browser: Browser):
         self.browser = browser
         self.webdriver = browser.webdriver
+        self.utils = browser.utils
 
     def getGoogleTrends(self, wordsCount: int) -> list:
         # Function to retrieve Google Trends search terms
@@ -109,6 +110,9 @@ class Searches:
         self.webdriver.get("https://bing.com")
 
         random.shuffle(search_terms)
+
+        time.sleep(5)
+        self.utils.tryDismissAllMessages()
 
         i = 0
         for word in search_terms:
