@@ -148,7 +148,7 @@ class Searches:
                     delay = random.uniform(0.2, 1)
                     time.sleep(delay)
                 searchbar.submit()
-                time.sleep(Utils.randomSeconds(100, 180))
+                time.sleep(self.browser.utils.randomSeconds(120, 240))
 
                 # Scroll down after the search (adjust the number of scrolls as needed)
                 for _ in range(3):  # Scroll down 3 times
@@ -156,15 +156,12 @@ class Searches:
                         "window.scrollTo(0, document.body.scrollHeight);"
                     )
                     time.sleep(
-                        Utils.randomSeconds(7, 15)
+                        self.browser.utils.randomSeconds(6, 15)
                     )  # Random wait between scrolls
 
                 return self.browser.utils.getBingAccountPoints()
             except TimeoutException:
-                if i == 5:
-                    logging.info("[BING] " + "TIMED OUT GETTING NEW PROXY")
-                    self.webdriver.proxy = self.browser.giveMeProxy()
-                elif i == 10:
+                if i == 10:
                     logging.error(
                         "[BING] "
                         + "Cancelling mobile searches due to too many retries."
@@ -172,6 +169,7 @@ class Searches:
                     return self.browser.utils.getBingAccountPoints()
                 self.browser.utils.tryDismissAllMessages()
                 logging.error("[BING] " + "Timeout, retrying in 5~ seconds...")
-                time.sleep(Utils.randomSeconds(7, 15))
+                time.sleep(self.browser.utils.randomSeconds(7, 15))
                 i += 1
+                self.webdriver.refresh()
                 continue

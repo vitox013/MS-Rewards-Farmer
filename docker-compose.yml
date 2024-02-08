@@ -1,6 +1,6 @@
 services:
   rewards-farmer:
-    image: ms-rewards-ok:1
+    image: ms-rewards-kmeans:3
     container_name: ms-reward-farmer
     shm_size: 8gb
     volumes:
@@ -9,7 +9,7 @@ services:
       - ./logs:/app/logs
     restart: 'no'
   rewards-farmer2:
-    image: ms-rewards-ok:1
+    image: ms-rewards-kmeans:3
     container_name: ms-reward-farmer2
     shm_size: 8gb
     volumes:
@@ -18,7 +18,7 @@ services:
       - ./logs2:/app/logs
     restart: 'no'
   rewards-farmer3:
-    image: ms-rewards-ok:1
+    image: ms-rewards-kmeans:3
     container_name: ms-reward-farmer3
     shm_size: 8gb
     volumes:
@@ -27,7 +27,7 @@ services:
       - ./logs3:/app/logs
     restart: 'no'
   rewards-farmer-kmeans:
-    image: ms-rewards-kmeans:1
+    image: ms-rewards-kmeans:3
     container_name: ms-reward-farmer-kmeans
     shm_size: 8gb
     volumes:

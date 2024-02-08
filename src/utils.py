@@ -301,9 +301,9 @@ class Utils:
             f"%10.{num_decimals}f", number, grouping=True
         ).strip()
 
-    def randomSeconds(self, max_value):
+    def randomSeconds(self, min_value, max_value):
         # Generate a random time interval in seconds
-        random_number = random.uniform(self, max_value)
+        random_number = random.uniform(min_value, max_value)
         return round(random_number, 3)
 
     @staticmethod
