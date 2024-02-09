@@ -80,25 +80,14 @@ class Login:
         except Exception:  # pylint: disable=broad-except
             logging.error("[ERROR] Erro ao logar")
 
-        attempts = 0
-        while attempts < 5:
-            try:
-                self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
-                )
-                logging.info("[LOGIN] Acessado account.microsoft com sucesso")
-                break
-            except Exception:  # pylint: disable=broad-except
-                attempts += 1
-                logging.warning("[LOGIN] MeePortal não encontrado. Tentando novamente.")
-                try:
-                    self.webdriver.get("https://account.microsoft.com/")
-                except Exception:  # pylint: disable=broad-except
-                    pass
-        else:
-            logging.error(
-                "[LOGIN] Falha ao acessar account.microsoft após 5 tentativas. Continuando mesmo assim."
+        try:
+            self.utils.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
             )
+            logging.info("[LOGIN] Acessado account.microsoft com sucesso")
+
+        except Exception:  # pylint: disable=broad-except
+            logging.warning("[LOGIN] MeePortal não encontrado. Tentando continuar.")
 
     def enterPassword(self, password):
         self.utils.waitUntilClickable(By.NAME, "passwd", 10)

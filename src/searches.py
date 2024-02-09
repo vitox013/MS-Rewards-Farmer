@@ -6,13 +6,13 @@ from datetime import date, timedelta
 
 import numpy as np
 import requests
-import unidecode  # Importe a biblioteca unidecode
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
+from unidecode import unidecode  # Importe a biblioteca unidecode
 
 from src.browser import Browser
 from src.utils import Utils
@@ -24,7 +24,7 @@ class Searches:
         self.webdriver = browser.webdriver
         self.utils = browser.utils
 
-    def getGoogleTrends(self, wordsCount: int) -> list:
+    def getGoogleTrends(wordsCount: int) -> list:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
         i = 0
@@ -39,53 +39,54 @@ class Searches:
                 "trendingSearches"
             ]:
                 title_query = topic["title"]["query"].lower()
-                searchTerms.append(
-                    unidecode.unidecode(title_query)
-                )  # Normalize o termo
+                searchTerms.append(unidecode(title_query))  # Normalize o termo
                 related_queries = [
                     relatedTopic["query"].lower()
                     for relatedTopic in topic["relatedQueries"]
                 ]
                 searchTerms.extend(
-                    unidecode.unidecode(related_query)
-                    for related_query in related_queries
+                    unidecode(related_query) for related_query in related_queries
                 )  # Normalize os termos relacionados
 
-        # Remover palavras únicas e com menos de 5 letras
-        searchTerms = [term for term in searchTerms if len(term) >= 5]
+            # Remover palavras únicas e com menos de 5 letras
+            searchTerms = [term for term in searchTerms if len(term) >= 5]
 
-        # Use TF-IDF to represent terms as vectors
-        vectorizer = TfidfVectorizer(stop_words="english")
-        X = vectorizer.fit_transform(searchTerms)
+            # Use TF-IDF to represent terms as vectors
+            vectorizer = TfidfVectorizer(stop_words="english")
+            X = vectorizer.fit_transform(searchTerms)
 
-        # Find optimal number of clusters
-        max_clusters = min(len(searchTerms), wordsCount)
-        best_score = -1
-        best_k = 2
-        for k in range(2, max_clusters + 1):
-            kmeans = KMeans(n_clusters=k, random_state=42)
+            # Find optimal number of clusters
+            max_clusters = wordsCount
+            best_score = -1
+            best_k = 2
+            for k in range(2, max_clusters + 1):
+                kmeans = KMeans(n_clusters=k, random_state=42)
+                kmeans.fit(X)
+                score = silhouette_score(X, kmeans.labels_)
+                if score > best_score:
+                    best_score = score
+                    best_k = k
+
+            # Cluster terms
+            kmeans = KMeans(n_clusters=best_k, random_state=42)
             kmeans.fit(X)
-            score = silhouette_score(X, kmeans.labels_)
-            if score > best_score:
-                best_score = score
-                best_k = k
+            cluster_labels = kmeans.labels_
 
-        # Cluster terms
-        kmeans = KMeans(n_clusters=best_k, random_state=42)
-        kmeans.fit(X)
-        cluster_labels = kmeans.labels_
+            # Selecionar um termo de cada cluster
+            selected_terms = []
+            cluster_centers = kmeans.cluster_centers_
+            for i in range(best_k):
+                cluster_indices = [
+                    index for index, label in enumerate(cluster_labels) if label == i
+                ]
+                center_index = min(
+                    cluster_indices,
+                    key=lambda x: np.linalg.norm(X[x] - cluster_centers[i]),
+                )
+                selected_terms.append(searchTerms[center_index])
 
-        # Selecionar um termo de cada cluster
-        selected_terms = []
-        cluster_centers = kmeans.cluster_centers_
-        for i in range(best_k):
-            cluster_indices = [
-                index for index, label in enumerate(cluster_labels) if label == i
-            ]
-            center_index = min(
-                cluster_indices, key=lambda x: np.linalg.norm(X[x] - cluster_centers[i])
-            )
-            selected_terms.append(searchTerms[center_index])
+            if len(selected_terms) >= wordsCount:
+                return selected_terms
 
         return selected_terms
 
@@ -115,9 +116,10 @@ class Searches:
         self.utils.tryDismissAllMessages()
 
         i = 0
+        logging.info(f"[BING] {len(search_terms)} words generated with kmeans!")
         for word in search_terms:
             i += 1
-            logging.info(f"[BING] {i}/{numberOfSearches}")
+            logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
             points = self.bingSearch(word)
             if points <= pointsCounter:
                 relatedTerms = self.getRelatedTerms(word)[:2]
