@@ -28,7 +28,7 @@ class Searches:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
         i = 0
-        while len(searchTerms) < wordsCount:
+        while True:
             i += 1
             # Fetching daily trends from Google Trends API
             r = requests.get(
@@ -87,8 +87,6 @@ class Searches:
 
             if len(selected_terms) >= wordsCount:
                 return selected_terms
-
-        return selected_terms
 
     def getRelatedTerms(self, word: str) -> list:
         # Function to retrieve related terms from Bing API
