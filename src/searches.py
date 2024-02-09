@@ -24,7 +24,7 @@ class Searches:
         self.webdriver = browser.webdriver
         self.utils = browser.utils
 
-    def getGoogleTrends(wordsCount: int) -> list:
+    def getGoogleTrends(self, wordsCount: int) -> list:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
         i = 0
