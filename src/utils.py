@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from .constants import BASE_URL
+from .constants import BASE_URL, MS_ACCOUNT_URL
 
 
 class Utils:
@@ -166,21 +166,42 @@ class Utils:
         return str(t)
 
     def getDashboardData(self) -> dict:
-        # Get the dashboard data using JavaScript execution
         time.sleep(5)
-        dashboard_data = None
-
-        while True:
+        dashboard_data = {}
+        MAX_RETRIES = 3
+        for attempt in range(MAX_RETRIES):
             try:
                 dashboard_data = self.webdriver.execute_script("return dashboard")
                 break
-            except Exception:  # pylint: disable=broad-except
-                self.webdriver.refresh()
-                logging.warning("[ERROR] Trying to get dashboard data")
-                time.sleep(30)
-                continue
-
+            except Exception as e:
+                logging.warning(f"[ERROR] Error getting dashboard data: {e}")
+                if attempt < MAX_RETRIES - 1:
+                    logging.warning("[ERROR] Retrying...")
+                    self.handle_login()
+                    self.handle_base_url_navigation()
+                else:
+                    logging.error("[ERROR] Dashboard data is not available")
         return dashboard_data
+
+    def handle_login(self):
+        try:
+            self.webdriver.get(MS_ACCOUNT_URL)
+            self.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 30
+            )
+            logging.info("[LOGIN] Successfully accessed account.microsoft")
+            time.sleep(10)
+        except Exception as e:
+            logging.warning(f"[LOGIN] MeePortal not found: {e}")
+
+    def handle_base_url_navigation(self):
+        try:
+            self.webdriver.get(BASE_URL)
+            self.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
+            )
+        except Exception as e:
+            logging.warning(f"Error navigating to base URL: {e}")
 
     def getBingInfo(self):
         # Get Bing information using cookies

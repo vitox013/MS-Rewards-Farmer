@@ -1,8 +1,10 @@
+import asyncio
 import json
 import logging
 import random
 import time
 from datetime import date, timedelta
+from typing import List, Optional
 
 import numpy as np
 import requests
@@ -15,7 +17,7 @@ from sklearn.metrics import silhouette_score
 from unidecode import unidecode  # Importe a biblioteca unidecode
 
 from src.browser import Browser
-from src.utils import Utils
+from src.gpt import GPT
 
 
 class Searches:
@@ -23,6 +25,43 @@ class Searches:
         self.browser = browser
         self.webdriver = browser.webdriver
         self.utils = browser.utils
+        self.gpt = GPT()
+
+    def get_search_terms_from_gpt(self, words_count: int) -> Optional[List[str]]:
+        """
+        Generate a list of search terms based on current hot topics in Brazil.
+
+        Args:
+            words_count (int): Number of search terms to generate.
+
+        Returns:
+            Optional[List[str]]: A list of search terms as strings, or None if an error occurs.
+        """
+        try:
+            prompt = f"""
+            Gere {words_count} termos de pesquisa sobre os tópicos mais populares no Brasil hoje,
+
+            Os termos de pesquisa devem ser retornados como
+            um JSON-Array de strings.
+
+            CADA TERMO DE PESQUISA DEVE SIMULAR UM USUÁRIO PESQUISANDO SOBRE O TÓPICO.
+
+            VOCÊ DEVE APENAS RETORNAR O JSON-ARRAY DE STRINGS.
+            NÃO RETORNE MAIS NADA.
+
+            Aqui está um exemplo de um JSON-Array de strings:
+            ["Como...", "Quando é...", "Qual..."]
+            """
+
+            terms = asyncio.run(self.gpt.generate_response(prompt=prompt))
+            if terms is not None:
+                array_terms = json.loads(terms)
+                if isinstance(array_terms, list):
+                    return array_terms
+        except Exception as e:
+            logging.warning(f"An error occurred on get search from gpt: {e}")
+
+        return None
 
     def getGoogleTrends(self, wordsCount: int) -> list:
         # Function to retrieve Google Trends search terms
@@ -105,7 +144,11 @@ class Searches:
             f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
         )
 
-        search_terms = self.getGoogleTrends(numberOfSearches)
+        search_terms = self.get_search_terms_from_gpt(numberOfSearches)
+
+        if search_terms is None:
+            search_terms = self.getGoogleTrends(numberOfSearches)
+
         self.webdriver.get("https://bing.com")
 
         random.shuffle(search_terms)
