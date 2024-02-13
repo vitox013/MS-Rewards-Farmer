@@ -26,12 +26,12 @@ services:
       - ./tmp3:/app/tmp
       - ./logs3:/app/logs
     restart: 'no'
-  rewards-farmer-kmeans:
+  rewards-farmer4:
     image: ms-rewards-kmeans:5
-    container_name: ms-reward-farmer-kmeans
+    container_name: ms-reward-farmer4
     shm_size: 8gb
     volumes:
-      - ./accounts3.json:/app/accounts.json
-      - ./tmp3:/app/tmp
-      - ./logs3:/app/logs
+      - ./accounts4.json:/app/accounts.json
+      - ./tmp4:/app/tmp
+      - ./logs4:/app/logs
     restart: 'no'
