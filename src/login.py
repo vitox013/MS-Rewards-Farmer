@@ -40,16 +40,14 @@ class Login:
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():
                 return "Locked"
-        self.utils.tryDismissCookieBanner()
-
-        logging.info("[LOGIN] " + "Logged-in !")
 
         self.utils.goHome()
+        logging.info(f"[LOGIN] Logged-in ! | {self.browser.username}")
         points = self.utils.getAccountPoints()
 
         logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
         self.checkBingLogin()
-        logging.info("[LOGIN] Logged-in successfully !")
+        logging.info(f"[LOGIN] Logged-in successfully ! | {self.browser.username}")
         return points
 
     def executeLogin(self):
@@ -73,34 +71,39 @@ class Login:
             time.sleep(5)
             self.utils.tryDismissAllMessages()
             time.sleep(5)
-            try:
-                self.webdriver.get("https://account.microsoft.com/")
-            except Exception:  # pylint: disable=broad-except
-                pass
         except Exception:  # pylint: disable=broad-except
             logging.error("[ERROR] Erro ao logar")
 
         try:
+            self.webdriver.get("https://account.microsoft.com/")
+
             self.utils.waitUntilVisible(
-                By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 20
+                By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 60
             )
             logging.info("[LOGIN] Acessado account.microsoft com sucesso")
 
         except Exception:  # pylint: disable=broad-except
-            logging.warning("[LOGIN] MeePortal não encontrado. Tentando continuar.")
+            logging.warning(
+                f"[ERROR] Ao acessar account.microsoft | {self.browser.username}"
+            )
 
     def enterPassword(self, password):
-        self.utils.waitUntilClickable(By.NAME, "passwd", 10)
-        self.utils.waitUntilClickable(By.ID, "idSIButton9", 10)
-        # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
-        # If password contains special characters like " ' or \, send_keys() will not work
-        password = password.replace("\\", "\\\\").replace('"', '\\"')
-        self.webdriver.execute_script(
-            f'document.getElementsByName("passwd")[0].value = "{password}";'
-        )
-        logging.info("[LOGIN] " + "Writing password...")
-        self.webdriver.find_element(By.ID, "idSIButton9").click()
-        time.sleep(3)
+        try:
+            self.utils.waitUntilClickable(By.NAME, "passwd", 20)
+            self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
+            # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
+            # If password contains special characters like " ' or \, send_keys() will not work
+            password = password.replace("\\", "\\\\").replace('"', '\\"')
+            self.webdriver.execute_script(
+                f'document.getElementsByName("passwd")[0].value = "{password}";'
+            )
+            logging.info("[LOGIN] " + "Writing password...")
+            self.webdriver.find_element(By.ID, "idSIButton9").click()
+            time.sleep(3)
+        except Exception as e:  # pylint: disable=broad-except
+            logging.warning(
+                f"[ERROR] on insert password of {self.browser.username}: {e}"
+            )
 
     def checkBingLogin(self):
         self.webdriver.get(

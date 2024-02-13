@@ -200,3 +200,4 @@ Dockerfile copy 2
 .venv
 .devcontainer/
 *json
+docker-compose.yml

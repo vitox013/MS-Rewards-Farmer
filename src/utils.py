@@ -166,7 +166,7 @@ class Utils:
         return str(t)
 
     def getDashboardData(self) -> dict:
-        time.sleep(5)
+        time.sleep(15)
         dashboard_data = {}
         MAX_RETRIES = 3
         for attempt in range(MAX_RETRIES):
@@ -174,7 +174,7 @@ class Utils:
                 dashboard_data = self.webdriver.execute_script("return dashboard")
                 break
             except Exception as e:
-                logging.warning(f"[ERROR] Error getting dashboard data: {e}")
+                logging.warning(f"[ERROR] Error getting dashboard data")
                 if attempt < MAX_RETRIES - 1:
                     logging.warning("[ERROR] Retrying...")
                     self.handle_login()
@@ -189,10 +189,10 @@ class Utils:
             self.waitUntilVisible(
                 By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 30
             )
-            logging.info("[LOGIN] Successfully accessed account.microsoft")
+            logging.info("[DASHBOARD] Successfully accessed account.microsoft")
             time.sleep(10)
         except Exception as e:
-            logging.warning(f"[LOGIN] MeePortal not found: {e}")
+            logging.warning(f"[DASHBOARD] MeePortal not found: {e}")
 
     def handle_base_url_navigation(self):
         try:

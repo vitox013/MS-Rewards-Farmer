@@ -68,12 +68,14 @@ class Searches:
                     array_terms = json.loads(terms)
 
                 if isinstance(array_terms, list):
-                    print(
-                        f"[BING] Requested {words_count} searchs and generated {len(array_terms)} with g4f!"
+                    logging.info(
+                        f"[BING] Requested {words_count} searchs and generated {len(array_terms)} with g4f!  | {self.browser.username}"
                     )
                     return array_terms
         except Exception as e:
-            print(f"An error occurred on get search from gpt: {e}")
+            logging.warning(
+                f"An error occurred on get searchs terms with gpt | {self.browser.username}"
+            )
 
         return None
 
@@ -139,6 +141,9 @@ class Searches:
                 selected_terms.append(searchTerms[center_index])
 
             if len(selected_terms) >= wordsCount:
+                logging.info(
+                    f"[BING] Requested {wordsCount} searchs and generated {len(selected_terms)} with kmeans! | {self.browser.username}"
+                )
                 return selected_terms
 
     def getRelatedTerms(self, word: str) -> list:
@@ -158,9 +163,10 @@ class Searches:
             f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
         )
 
-        search_terms = self.get_search_terms_from_gpt(numberOfSearches)
+        search_terms = self.get_search_terms_with_gpt(numberOfSearches)
 
         if search_terms is None:
+            logging.warning(f"[INFO] Using GoogleTrends on | {self.browser.username} ")
             search_terms = self.getGoogleTrends(numberOfSearches)
 
         self.webdriver.get("https://bing.com")
