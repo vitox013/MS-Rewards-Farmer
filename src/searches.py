@@ -4,7 +4,7 @@ import logging
 import random
 import re
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 import numpy as np
@@ -38,9 +38,10 @@ class Searches:
         Returns:
             Optional[List[str]]: A list of search terms as strings, or None if an error occurs.
         """
+        today_date = datetime.now().strftime("%d/%m")
         try:
             prompt = f"""
-            Gere {words_count} termos de pesquisa sobre os tópicos mais populares no Brasil hoje,
+            Gere {words_count} termos de pesquisa unicos sobre os tópicos mais populares no Brasil hoje, dia {today_date},
 
             Os termos de pesquisa devem ser retornados como
             um Array de strings.
@@ -49,8 +50,10 @@ class Searches:
 
             VOCÊ DEVE APENAS RETORNAR O ARRAY DE STRINGS INICIANDO COM [ E FINALIZANDO COM ].
 
+            Não utilize "Como fazer...".
+
             Aqui está um exemplo de um Array de strings:
-            ["Como...", "Quando é...", "Qual...", "Quem...", "Quais...", "O que é..."]
+            ["Quando é...", "Qual...", "Quem...", "Quais...", "O que é..."]
             """
             padrao = r"\[([^]]+)\]"
             array_text = None

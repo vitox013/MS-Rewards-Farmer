@@ -15,8 +15,15 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import (Browser, DailySet, Login, MorePromotions, PunchCards,
-                 Searches, VersusGame)
+from src import (
+    Browser,
+    DailySet,
+    Login,
+    MorePromotions,
+    PunchCards,
+    Searches,
+    VersusGame,
+)
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -352,6 +359,13 @@ def process_account(currentAccount, notifier, args, previous_points_data):
     except Exception as e:
         notifier.send("⚠️ Error occurred, please check the log", currentAccount)
         logging.exception(f"{e.__class__.__name__}: {e}")
+        retry_thread(currentAccount, notifier, args, previous_points_data)
+
+
+def retry_thread(currentAccount, notifier, args, previous_points_data):
+    # Adicione aqui a lógica para tentar novamente
+    logging.info(f"Tentando novamente... | { currentAccount.get('username', '') }")
+    process_account(currentAccount, notifier, args, previous_points_data)
 
 
 if __name__ == "__main__":

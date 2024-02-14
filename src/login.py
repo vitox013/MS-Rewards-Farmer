@@ -16,26 +16,31 @@ class Login:
 
     def login(self):
         logging.info("[LOGIN] " + "Logging-in...")
+        max_attempts = 5
+        attempts = 0
         self.webdriver.get(
             "https://rewards.bing.com/Signin/"
         )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
         alreadyLoggedIn = False
-        while True:
+        while attempts < max_attempts:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 0.1
-                )
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
+                )  # Adjust timeout as needed
                 alreadyLoggedIn = True
                 break
             except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "loginHeader", 0.1)
+                    self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
+                    alreadyLoggedIn = True
                     break
                 except Exception:  # pylint: disable=broad-except
                     self.utils.tryDismissAllMessages()
-                    self.webdriver.get("https://rewards.bing.com/Signin/")
                     time.sleep(5)
+                    attempts += 1
                     continue
+        if attempts == max_attempts:
+            logging.error("[LOGIN] Maximum attempts reached. Failed to load the page.")
 
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():

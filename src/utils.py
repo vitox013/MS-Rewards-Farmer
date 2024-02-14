@@ -198,7 +198,7 @@ class Utils:
         try:
             self.webdriver.get(BASE_URL)
             self.waitUntilVisible(
-                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
+                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 30
             )
         except Exception as e:
             logging.warning(f"Error navigating to base URL: {e}")
