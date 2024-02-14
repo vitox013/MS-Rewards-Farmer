@@ -61,8 +61,8 @@ class Browser:
         options = webdriver.ChromeOptions()
         options.headless = self.headless
         # options.headless = False
-        options.add_argument(f"--lang={self.localeLang}")
-
+        options.add_argument("--lang=pt-BR")
+        options.add_experimental_option("prefs", {"intl.accept_languages": "pt,pt_BR"})
         # Reduzindo argumentos desnecessários
         options.add_argument("--ignore-certificate-errors")
         options.add_argument("--ignore-ssl-errors")
@@ -193,5 +193,5 @@ class Browser:
                     if geo is None:
                         geo = nfo["country"]
             except Exception:  # pylint: disable=broad-except
-                return ("en", "US")
+                return ("pt", "BR")
         return (lang, geo)
