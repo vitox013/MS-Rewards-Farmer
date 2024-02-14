@@ -32,7 +32,6 @@ class Login:
             except Exception:  # pylint: disable=broad-except
                 try:
                     self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
-                    alreadyLoggedIn = True
                     break
                 except Exception:  # pylint: disable=broad-except
                     self.utils.tryDismissAllMessages()
