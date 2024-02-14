@@ -177,7 +177,6 @@ class Searches:
         self.utils.tryDismissAllMessages()
 
         i = 0
-        logging.info(f"[BING] {len(search_terms)} words generated with kmeans!")
         for word in search_terms:
             i += 1
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
