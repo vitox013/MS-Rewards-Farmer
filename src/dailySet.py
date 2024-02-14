@@ -25,6 +25,7 @@ class DailySet:
                     cardId = int(activity["offerId"][-1:])
                     # Open the Daily Set activity
                     self.activities.openDailySetActivity(cardId)
+                    self.browser.utils.tryDismissBingCookieBanner()
                     if activity["promotionType"] == "urlreward":
                         logging.info(f"[DAILY SET] Completing search of card {cardId}")
                         # Complete search for URL reward

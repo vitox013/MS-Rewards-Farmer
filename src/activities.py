@@ -35,8 +35,9 @@ class Activities:
 
     def completeSurvey(self):
         # Simulate completing a survey activity
-        self.webdriver.find_element(By.ID, f"btoption{random.randint(0, 1)}").click()
-        time.sleep(self.browser.utils.randomSeconds(10, 15))
+        option = random.randint(0, 1)
+        self.webdriver.find_element(By.ID, f"btoption{option}").click()
+        time.sleep(self.browser.utils.randomSeconds(12, 18))
         self.browser.utils.closeCurrentTab()
 
     def completeQuiz(self):

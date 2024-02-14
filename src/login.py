@@ -109,6 +109,8 @@ class Login:
         self.webdriver.get(
             "https://www.bing.com/fd/auth/signin?action=interactive&provider=windows_live_id&return_url=https%3A%2F%2Fwww.bing.com%2F"
         )
+        time.sleep(5)
+        self.utils.tryDismissBingCookieBanner()
         while True:
             currentUrl = urllib.parse.urlparse(self.webdriver.current_url)
             if currentUrl.hostname == "www.bing.com" and currentUrl.path == "/":
