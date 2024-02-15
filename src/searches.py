@@ -185,10 +185,12 @@ class Searches:
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
             points = self.bingSearch(word)
             if points <= pointsCounter:
-                relatedTerms = self.getRelatedTerms(word)[:2]
+                relatedTerms = self.get_related_terms_with_gpt(word)
+                if relatedTerms is None:
+                    relatedTerms = self.getRelatedTerms(word)[:2]
                 for term in relatedTerms:
                     points = self.bingSearch(term)
-                    if not points <= pointsCounter:
+                    if points > pointsCounter:
                         break
             if points > 0:
                 pointsCounter = points
@@ -238,3 +240,41 @@ class Searches:
                 i += 1
                 self.webdriver.refresh()
                 continue
+
+    def get_related_terms_with_gpt(self, word: str) -> Optional[List[str]]:
+        try:
+            prompt = f"""
+            Gere 5 termos de pesquisa relacionado a um assunto.
+
+            Assunto: '{word}'.
+
+            Os termos de pesquisa devem ser retornados como
+            um Array de strings.
+
+            CADA TERMO DE PESQUISA DEVE SIMULAR UM USUÁRIO PESQUISANDO SOBRE O ASSUNTO.
+
+            VOCÊ DEVE APENAS RETORNAR O ARRAY DE STRINGS INICIANDO COM [ E FINALIZANDO COM ].
+            """
+            padrao = r"\[([^]]+)\]"
+            array_text = None
+
+            terms = asyncio.run(self.gpt.generate_response(prompt=prompt))
+
+            if terms is not None:
+                match = re.search(padrao, terms)
+                if match:
+                    array_text = "[" + match.group(1) + "]"
+
+                if array_text is not None:
+                    array_terms = json.loads(array_text)
+                else:
+                    array_terms = json.loads(terms)
+
+                if isinstance(array_terms, list):
+                    return array_terms
+        except Exception:
+            logging.warning(
+                f"An error occurred on get related terms with gpt | {self.browser.username}"
+            )
+
+        return None
