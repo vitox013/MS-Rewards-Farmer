@@ -188,7 +188,12 @@ class Searches:
                 relatedTerms = self.get_related_terms_with_gpt(word)
                 if relatedTerms is None:
                     relatedTerms = self.getRelatedTerms(word)[:2]
+                j = 0
                 for term in relatedTerms:
+                    j += 1
+                    logging.warning(
+                        f"[BING RELATED] {i}/{numberOfSearches} | {j}/5 | {term}"
+                    )
                     points = self.bingSearch(term)
                     if points > pointsCounter:
                         break
