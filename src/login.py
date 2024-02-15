@@ -16,7 +16,7 @@ class Login:
 
     def login(self):
         logging.info("[LOGIN] " + "Logging-in...")
-        max_attempts = 5
+        max_attempts = 3
         attempts = 0
         self.webdriver.get(
             "https://rewards.bing.com/Signin/"
@@ -34,10 +34,15 @@ class Login:
                     self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
                     break
                 except Exception:  # pylint: disable=broad-except
-                    self.utils.tryDismissAllMessages()
-                    time.sleep(5)
-                    attempts += 1
-                    continue
+                    try:
+                        self.utils.waitUntilVisible(By.ID, "i0281", 10)
+                        break
+                    except Exception:  # pylint: disable=broad-except
+                        self.utils.tryDismissAllMessages()
+                        self.webdriver.refresh()
+                        time.sleep(10)
+                        attempts += 1
+                        continue
         if attempts == max_attempts:
             logging.error("[LOGIN] Maximum attempts reached. Failed to load the page.")
 
@@ -45,12 +50,12 @@ class Login:
             if isLocked := self.executeLogin():
                 return "Locked"
 
+        self.checkBingLogin()
+        logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
         self.utils.goHome()
-        logging.info(f"[LOGIN] Logged-in ! | {self.browser.username}")
+        time.sleep(10)
         points = self.utils.getAccountPoints()
 
-        logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
-        self.checkBingLogin()
         logging.info(f"[LOGIN] Logged-in successfully ! | {self.browser.username}")
         return points
 

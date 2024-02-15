@@ -364,7 +364,7 @@ def process_account(currentAccount, notifier, args, previous_points_data):
 
 def retry_thread(currentAccount, notifier, args, previous_points_data):
     # Adicione aqui a lógica para tentar novamente
-    logging.info(f"Tentando novamente... | { currentAccount.get('username', '') }")
+    logging.warning(f"Tentando novamente... | { currentAccount.get('username', '') }")
     process_account(currentAccount, notifier, args, previous_points_data)
 
 
