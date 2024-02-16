@@ -341,25 +341,35 @@ def save_previous_points_data(data):
 
 
 def process_account(currentAccount, notifier, args, previous_points_data):
-    try:
-        earned_points = executeBot(currentAccount, notifier, args)
-        account_name = currentAccount.get("username", "")
-        previous_points = previous_points_data.get(account_name, 0)
+    retries = 3
+    while retries > 0:
+        try:
+            earned_points = executeBot(currentAccount, notifier, args)
+            account_name = currentAccount.get("username", "")
+            previous_points = previous_points_data.get(account_name, 0)
 
-        # Calculate the difference in points from the prior day
-        points_difference = earned_points - previous_points
+            # Calculate the difference in points from the prior day
+            points_difference = earned_points - previous_points
 
-        # Append the daily points and points difference to CSV and Excel
-        log_daily_points_to_csv(account_name, earned_points, points_difference)
+            # Append the daily points and points difference to CSV and Excel
+            log_daily_points_to_csv(account_name, earned_points, points_difference)
 
-        # Update the previous day's points data
-        previous_points_data[account_name] = earned_points
+            # Update the previous day's points data
+            previous_points_data[account_name] = earned_points
 
-        logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
-    except Exception as e:
-        notifier.send("⚠️ Error occurred, please check the log", currentAccount)
-        logging.exception(f"{e.__class__.__name__}: {e}")
-        retry_thread(currentAccount, notifier, args, previous_points_data)
+            logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
+            break  # Sair do loop se a execução for bem-sucedida
+        except Exception as e:
+            retries -= 1
+            if retries == 0:
+                notifier.send(
+                    "⚠️ Error occurred after 3 attempts, please check the log",
+                    currentAccount,
+                )
+                logging.exception(f"{e.__class__.__name__}: {e}")
+            else:
+                logging.warning(f"Error occurred: {e}. Retrying...")
+                time.sleep(10)  # Esperar um pouco antes de tentar novamente
 
 
 def retry_thread(currentAccount, notifier, args, previous_points_data):

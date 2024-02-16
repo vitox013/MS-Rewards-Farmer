@@ -180,6 +180,7 @@ class Searches:
         self.utils.tryDismissAllMessages()
 
         i = 0
+        break_triggered = False  # Flag para indicar se o break foi acionado
         for word in search_terms:
             i += 1
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
@@ -192,11 +193,17 @@ class Searches:
                 for term in relatedTerms:
                     j += 1
                     logging.warning(
-                        f"[BING RELATED] {i}/{numberOfSearches} | {j}/5 | {term}"
+                        f"[BING RELATED] {i}/{numberOfSearches} | {j}/3 | {term}"
                     )
                     points = self.bingSearch(term)
                     if points > pointsCounter:
+                        break_triggered = True
                         break
+                if not break_triggered:
+                    logging.error(
+                        f"[BING RELATED] Possível bloqueio. Reiniciando browser. | {self.browser.username}"
+                    )
+                    raise Exception()
             if points > 0:
                 pointsCounter = points
             else:
@@ -249,7 +256,7 @@ class Searches:
     def get_related_terms_with_gpt(self, word: str) -> Optional[List[str]]:
         try:
             prompt = f"""
-            Gere 5 termos de pesquisa relacionado a um assunto.
+            Gere 3 termos de pesquisa relacionado a um assunto.
 
             Assunto: '{word}'.
 

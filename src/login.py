@@ -60,7 +60,6 @@ class Login:
         return points
 
     def executeLogin(self):
-        self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
         logging.info("[LOGIN] " + "Entering email...")
         time.sleep(5)
         self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
