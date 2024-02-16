@@ -180,7 +180,7 @@ class Searches:
         self.utils.tryDismissAllMessages()
 
         i = 0
-        break_triggered = False  # Flag para indicar se o break foi acionado
+        attempt = 0
         for word in search_terms:
             i += 1
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
@@ -190,6 +190,7 @@ class Searches:
                 if relatedTerms is None:
                     relatedTerms = self.getRelatedTerms(word)[:2]
                 j = 0
+                break_triggered = False  # Flag para indicar se o break foi acionado
                 for term in relatedTerms:
                     j += 1
                     logging.warning(
@@ -200,6 +201,8 @@ class Searches:
                         break_triggered = True
                         break
                 if not break_triggered:
+                    attempt += 1
+                if attempt == 3:
                     logging.error(
                         f"[BING RELATED] Possível bloqueio. Reiniciando browser. | {self.browser.username}"
                     )

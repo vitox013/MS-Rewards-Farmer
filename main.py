@@ -15,15 +15,8 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import (
-    Browser,
-    DailySet,
-    Login,
-    MorePromotions,
-    PunchCards,
-    Searches,
-    VersusGame,
-)
+from src import (Browser, DailySet, Login, MorePromotions, PunchCards,
+                 Searches, VersusGame)
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -368,7 +361,8 @@ def process_account(currentAccount, notifier, args, previous_points_data):
                 )
                 logging.exception(f"{e.__class__.__name__}: {e}")
             else:
-                logging.warning(f"Error occurred: {e}. Retrying...")
+                account_name2 = currentAccount.get("username", "")
+                logging.warning(f"Error occurred: {e}. Retrying... | {account_name2}")
                 time.sleep(10)  # Esperar um pouco antes de tentar novamente
 
 
