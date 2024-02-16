@@ -3,6 +3,11 @@ import logging
 import time
 import urllib.parse
 
+from selenium.common.exceptions import (
+    ElementNotInteractableException,
+    NoSuchElementException,
+    TimeoutException,
+)
 from selenium.webdriver.common.by import By
 
 from src.browser import Browser
@@ -97,20 +102,44 @@ class Login:
 
     def enterPassword(self, password):
         try:
+            # Espera até que o campo de senha seja clicável
             self.utils.waitUntilClickable(By.NAME, "passwd", 20)
+
+            # Espera até que o botão de login seja clicável
             self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
-            # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
-            # If password contains special characters like " ' or \, send_keys() will not work
-            password = password.replace("\\", "\\\\").replace('"', '\\"')
+
+            time.sleep(3)
+            # Define o valor do campo de senha usando JavaScript
             self.webdriver.execute_script(
                 f'document.getElementsByName("passwd")[0].value = "{password}";'
             )
+
             logging.info("[LOGIN] " + "Writing password...")
+
+            # Clica no botão de login
             self.webdriver.find_element(By.ID, "idSIButton9").click()
+
+            # Espera um tempo curto após o clique para permitir que a página carregue
             time.sleep(3)
-        except Exception as e:  # pylint: disable=broad-except
+
+        except NoSuchElementException as e:
             logging.warning(
-                f"[ERROR] on insert password of {self.browser.username}: {e}"
+                f"[INSERT PASSWORD] Elemento não encontrado: {self.browser.username} | {e}"
+            )
+
+        except ElementNotInteractableException as e:
+            logging.warning(
+                f"[INSERT PASSWORD] Elemento não é interagível: {self.browser.username} | {e}"
+            )
+
+        except TimeoutException as e:
+            logging.warning(
+                f"[INSERT PASSWORD] Tempo limite excedido: {self.browser.username} | {e}"
+            )
+
+        except Exception as e:
+            logging.warning(
+                f"[INSERT PASSWORD] Erro desconhecido: {self.browser.username} | {e}"
             )
 
     def checkBingLogin(self):
