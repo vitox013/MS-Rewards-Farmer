@@ -12,6 +12,8 @@ from selenium.webdriver.common.by import By
 
 from src.browser import Browser
 
+from .constants import BASE_URL
+
 
 class Login:
     def __init__(self, browser: Browser):
@@ -88,13 +90,22 @@ class Login:
             logging.error("[ERROR] Erro ao logar")
 
         try:
+            self.utils.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 20
+            )
+            logging.info(f"[LOGIN] Logged in rewardsPortal: {self.browser.username} ")
+        except Exception:
+            logging.error(
+                f"[LOGIN] Erro ao logar no rewardsPortal após inserir senha: {self.browser.username} | restarting..."
+            )
+            raise Exception()
+
+        try:
             self.webdriver.get("https://account.microsoft.com/")
 
             self.utils.waitUntilVisible(
                 By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 60
             )
-            logging.info("[LOGIN] Acessado account.microsoft com sucesso")
-
         except Exception:  # pylint: disable=broad-except
             logging.warning(
                 f"[ERROR] Ao acessar account.microsoft | {self.browser.username}"
@@ -105,27 +116,39 @@ class Login:
             # Espera até que o campo de senha seja clicável
             try:
                 self.utils.waitUntilClickable(By.NAME, "passwd", 20)
-            except Exception:
-                logging.warning("[LOGIN PASSWORD] waitUntilClickable passwd failed")
+            except Exception as e:
+                logging.warning(
+                    f"[LOGIN PASSWORD] waitUntilClickable passwd failed: {self.browser.username} | {e} "
+                )
 
             # Espera até que o botão de login seja clicável
             try:
                 self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
-            except Exception:
+            except Exception as e:
                 logging.warning(
-                    "[LOGIN PASSWORD] waitUntilClickable idSIButton9 failed"
+                    f"[LOGIN PASSWORD] waitUntilClickable idSIButton9 failed: {self.browser.username} | {e} "
                 )
 
             time.sleep(3)
             # Define o valor do campo de senha usando JavaScript
-            self.webdriver.execute_script(
-                f'document.getElementsByName("passwd")[0].value = "{password}";'
-            )
+            try:
+                self.webdriver.execute_script(
+                    f'document.getElementsByName("passwd")[0].value = "{password}";'
+                )
+            except Exception as e:
+                logging.warning(
+                    f"[INSERT PASSWORD] Error on inserir password: {self.browser.username} | {e} "
+                )
 
             logging.info("[LOGIN] " + "Writing password...")
 
             # Clica no botão de login
-            self.webdriver.find_element(By.ID, "idSIButton9").click()
+            try:
+                self.webdriver.find_element(By.ID, "idSIButton9").click()
+            except Exception as e:
+                logging.warning(
+                    f"[CLICK BUTTON LOGIN] Erro on click idSIButton9 login: {self.browser.username} | Error: {e}"
+                )
 
             # Espera um tempo curto após o clique para permitir que a página carregue
             time.sleep(3)
