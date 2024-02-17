@@ -21,7 +21,7 @@ class Login:
         self.webdriver = browser.webdriver
         self.utils = browser.utils
 
-    def login(self):
+    def login(self, notifier, account):
         logging.info("[LOGIN] " + "Logging-in...")
         max_attempts = 3
         attempts = 0
@@ -54,7 +54,7 @@ class Login:
             logging.error("[LOGIN] Maximum attempts reached. Failed to load the page.")
 
         if not alreadyLoggedIn:
-            if isLocked := self.executeLogin():
+            if isLocked := self.executeLogin(notifier=notifier, account=account):
                 return "Locked"
 
         self.checkBingLogin()
@@ -66,7 +66,7 @@ class Login:
         logging.info(f"[LOGIN] Logged-in successfully ! | {self.browser.username}")
         return points
 
-    def executeLogin(self):
+    def executeLogin(self, notifier, account):
         logging.info("[LOGIN] " + "Entering email...")
         time.sleep(5)
         self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
@@ -88,6 +88,12 @@ class Login:
             time.sleep(5)
         except Exception:  # pylint: disable=broad-except
             logging.error("[ERROR] Erro ao logar")
+
+        try:
+            self.utils.waitUntilVisible(By.ID, "iProofEmail", 20)
+            notifier.send("🚫 Precisa confirmar código email", account)
+        except:
+            pass
 
         try:
             self.utils.waitUntilVisible(
@@ -121,33 +127,33 @@ class Login:
                     f"[LOGIN PASSWORD] waitUntilClickable passwd failed: {self.browser.username} | {e} "
                 )
 
-            # Espera até que o botão de login seja clicável
-            try:
-                self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
-            except Exception as e:
-                logging.warning(
-                    f"[LOGIN PASSWORD] waitUntilClickable idSIButton9 failed: {self.browser.username} | {e} "
-                )
-
             time.sleep(3)
+            logging.info("[LOGIN] " + "Writing password...")
             # Define o valor do campo de senha usando JavaScript
             try:
-                self.webdriver.execute_script(
-                    f'document.getElementsByName("passwd")[0].value = "{password}";'
-                )
+                # self.webdriver.execute_script(
+                #     f'document.getElementsByName("passwd")[0].value = "{password}";'
+                # )
+                self.utils.waitUntilClickable(By.ID, "i0118", 10)
+                pwd_field = self.webdriver.find_element(By.ID, "i0118")
+
+                while True:
+                    pwd_field.send_keys(self.browser.password)
+                    time.sleep(1)
+                    if pwd_field.get_attribute("value") == self.browser.password:
+                        # Clica no botão de login
+                        try:
+                            self.webdriver.find_element(By.ID, "idSIButton9").click()
+                        except Exception as e:
+                            logging.warning(
+                                f"[CLICK BUTTON LOGIN] Erro on click idSIButton9 login: {self.browser.username} | Error: {e}"
+                            )
+                        break
+
+                    pwd_field.clear()
             except Exception as e:
                 logging.warning(
                     f"[INSERT PASSWORD] Error on inserir password: {self.browser.username} | {e} "
-                )
-
-            logging.info("[LOGIN] " + "Writing password...")
-
-            # Clica no botão de login
-            try:
-                self.webdriver.find_element(By.ID, "idSIButton9").click()
-            except Exception as e:
-                logging.warning(
-                    f"[CLICK BUTTON LOGIN] Erro on click idSIButton9 login: {self.browser.username} | Error: {e}"
                 )
 
             # Espera um tempo curto após o clique para permitir que a página carregue

@@ -15,8 +15,15 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import (Browser, DailySet, Login, MorePromotions, PunchCards,
-                 Searches, VersusGame)
+from src import (
+    Browser,
+    DailySet,
+    Login,
+    MorePromotions,
+    PunchCards,
+    Searches,
+    VersusGame,
+)
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -220,7 +227,7 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
     startingPoints = 0
 
     with Browser(mobile=False, account=currentAccount, args=args) as desktopBrowser:
-        accountPointsCounter = Login(desktopBrowser).login()
+        accountPointsCounter = Login(desktopBrowser).login(notifier, currentAccount)
         startingPoints = accountPointsCounter
         if startingPoints == "Locked":
             notifier.send("🚫 Account is Locked", currentAccount)
@@ -264,7 +271,7 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
     if remainingSearchesM != 0:
         desktopBrowser.closeBrowser()
         with Browser(mobile=True, account=currentAccount, args=args) as mobileBrowser:
-            accountPointsCounter = Login(mobileBrowser).login()
+            accountPointsCounter = Login(mobileBrowser).login(notifier, currentAccount)
             accountPointsCounter = Searches(mobileBrowser).bingSearches(
                 remainingSearchesM
             )
