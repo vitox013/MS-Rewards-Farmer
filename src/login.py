@@ -1,5 +1,6 @@
 import contextlib
 import logging
+import sys
 import time
 import urllib.parse
 
@@ -92,6 +93,10 @@ class Login:
         try:
             self.utils.waitUntilVisible(By.ID, "iProofEmail", 20)
             notifier.send("🚫 Precisa confirmar código email", account)
+            logging.error(
+                "[ERROR] Precisa confirmar código email... Saindo da aplicação!"
+            )
+            sys.exit(1)
         except:
             pass
 
