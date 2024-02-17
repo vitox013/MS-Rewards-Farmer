@@ -103,10 +103,18 @@ class Login:
     def enterPassword(self, password):
         try:
             # Espera até que o campo de senha seja clicável
-            self.utils.waitUntilClickable(By.NAME, "passwd", 20)
+            try:
+                self.utils.waitUntilClickable(By.NAME, "passwd", 20)
+            except Exception:
+                logging.warning("[LOGIN PASSWORD] waitUntilClickable passwd failed")
 
             # Espera até que o botão de login seja clicável
-            self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
+            try:
+                self.utils.waitUntilClickable(By.ID, "idSIButton9", 20)
+            except Exception:
+                logging.warning(
+                    "[LOGIN PASSWORD] waitUntilClickable idSIButton9 failed"
+                )
 
             time.sleep(3)
             # Define o valor do campo de senha usando JavaScript
@@ -121,21 +129,6 @@ class Login:
 
             # Espera um tempo curto após o clique para permitir que a página carregue
             time.sleep(3)
-
-        except NoSuchElementException as e:
-            logging.warning(
-                f"[INSERT PASSWORD] Elemento não encontrado: {self.browser.username} | {e}"
-            )
-
-        except ElementNotInteractableException as e:
-            logging.warning(
-                f"[INSERT PASSWORD] Elemento não é interagível: {self.browser.username} | {e}"
-            )
-
-        except TimeoutException as e:
-            logging.warning(
-                f"[INSERT PASSWORD] Tempo limite excedido: {self.browser.username} | {e}"
-            )
 
         except Exception as e:
             logging.warning(

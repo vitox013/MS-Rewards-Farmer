@@ -203,10 +203,12 @@ class Searches:
                 if not break_triggered:
                     attempt += 1
                 if attempt == 3:
+                    pause_time = self.browser.utils.randomSeconds(960, 1500)
                     logging.error(
-                        f"[BING RELATED] Possível bloqueio. Reiniciando browser. | {self.browser.username}"
+                        f"[BING RELATED] Possível bloqueio. Pausando searches por {pause_time / 60} minutos. | {self.browser.username}"
                     )
-                    raise Exception()
+                    time.sleep(pause_time)
+                    attempt = 0
             if points > 0:
                 pointsCounter = points
             else:
