@@ -100,16 +100,19 @@ class Login:
         except:
             pass
 
+        errors = 0
         try:
+            self.webdriver.get(BASE_URL)
+
             self.utils.waitUntilVisible(
-                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 20
+                By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 60
             )
             logging.info(f"[LOGIN] Logged in rewardsPortal: {self.browser.username} ")
         except Exception:
-            logging.error(
-                f"[LOGIN] Erro ao logar no rewardsPortal após inserir senha: {self.browser.username} | restarting..."
+            logging.warning(
+                f"[LOGIN] Erro ao logar no rewardsPortal após inserir senha: {self.browser.username}"
             )
-            raise Exception()
+            errors += 1
 
         try:
             self.webdriver.get("https://account.microsoft.com/")
@@ -121,19 +124,17 @@ class Login:
             logging.warning(
                 f"[ERROR] Ao acessar account.microsoft | {self.browser.username}"
             )
+            errors += 1
+
+        if errors == 2:
+            logging.error(
+                f"[ERROR] Erro ao acessar rewards portal e account.microsoft: {self.browser.username} | restarting..."
+            )
+            raise Exception()
 
     def enterPassword(self, password):
         try:
-            # Espera até que o campo de senha seja clicável
-            try:
-                self.utils.waitUntilClickable(By.NAME, "passwd", 20)
-            except Exception as e:
-                logging.warning(
-                    f"[LOGIN PASSWORD] waitUntilClickable passwd failed: {self.browser.username} | {e} "
-                )
-
             time.sleep(3)
-            logging.info("[LOGIN] " + "Writing password...")
             # Define o valor do campo de senha usando JavaScript
             try:
                 # self.webdriver.execute_script(
@@ -143,6 +144,7 @@ class Login:
                 pwd_field = self.webdriver.find_element(By.ID, "i0118")
 
                 while True:
+                    logging.info("[LOGIN] " + "Writing password...")
                     pwd_field.send_keys(self.browser.password)
                     time.sleep(1)
                     if pwd_field.get_attribute("value") == self.browser.password:
