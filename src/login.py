@@ -140,12 +140,27 @@ class Login:
                 # self.webdriver.execute_script(
                 #     f'document.getElementsByName("passwd")[0].value = "{password}";'
                 # )
-                self.utils.waitUntilClickable(By.ID, "i0118", 10)
-                pwd_field = self.webdriver.find_element(By.ID, "i0118")
+                try:
+                    self.utils.waitUntilVisible(By.ID, "i0118", 30)
+                except:
+                    logging.warning(
+                        f"[PASSWORD] waitUntilVisible failed | {self.browser.username} "
+                    )
+                try:
+                    pwd_field = self.webdriver.find_element(By.ID, "i0118")
+                except:
+                    logging.warning(
+                        f"[PASSWORD] Erro ao encontrar pwd_field | {self.browser.username} "
+                    )
 
                 while True:
                     logging.info("[LOGIN] " + "Writing password...")
-                    pwd_field.send_keys(self.browser.password)
+                    try:
+                        pwd_field.send_keys(self.browser.password)
+                    except:
+                        logging.warning(
+                            f"[PASSWORD] Erro ao escrever senha | {self.browser.username} "
+                        )
                     time.sleep(1)
                     if pwd_field.get_attribute("value") == self.browser.password:
                         # Clica no botão de login

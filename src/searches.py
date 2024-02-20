@@ -204,8 +204,8 @@ class Searches:
                     attempt += 1
                 if attempt == 3:
                     pause_time = self.browser.utils.randomSeconds(960, 1500)
-                    logging.error(
-                        f"[BING RELATED] Possível bloqueio. Pausando searches por {pause_time / 60} minutos. | {self.browser.username}"
+                    logging.warning(
+                        f"[BING RELATED] Possível bloqueio. Pausando searches por {pause_time / 60} minutos | {self.browser.username}"
                     )
                     time.sleep(pause_time)
                     attempt = 0

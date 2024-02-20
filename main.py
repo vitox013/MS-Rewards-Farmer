@@ -366,7 +366,9 @@ def process_account(currentAccount, notifier, args, previous_points_data):
                     "⚠️ Error occurred after 3 attempts, please check the log",
                     currentAccount,
                 )
-                logging.exception(f"{e.__class__.__name__}: {e}")
+                logging.error(
+                    f"[CRITICAL] ⚠️ Error occurred after 3 attempts. Closing thread! ⚠️ | {currentAccount.get('username', '')}"
+                )
             else:
                 account_name2 = currentAccount.get("username", "")
                 logging.warning(f"Error occurred: {e}. Retrying... | {account_name2}")
