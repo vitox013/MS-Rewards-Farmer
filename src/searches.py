@@ -188,13 +188,13 @@ class Searches:
             if points <= pointsCounter:
                 relatedTerms = self.get_related_terms_with_gpt(word)
                 if relatedTerms is None:
-                    relatedTerms = self.getRelatedTerms(word)[:2]
+                    relatedTerms = self.getRelatedTerms(word)[:1]
                 j = 0
                 break_triggered = False  # Flag para indicar se o break foi acionado
                 for term in relatedTerms:
                     j += 1
                     logging.warning(
-                        f"[BING RELATED] {i}/{numberOfSearches} | {j}/3 | {term}"
+                        f"[BING RELATED] {i}/{numberOfSearches} | {j}/1 | {term}"
                     )
                     points = self.bingSearch(term)
                     if points > pointsCounter:
@@ -202,12 +202,12 @@ class Searches:
                         break
                 if not break_triggered:
                     attempt += 1
-                if attempt == 3:
-                    pause_time = self.browser.utils.randomSeconds(960, 1500)
+                if attempt == 2:
                     logging.warning(
-                        f"[BING RELATED] Possível bloqueio. Pausando searches por {pause_time / 60} minutos | {self.browser.username}"
+                        "[BING RELATED] Possível bloqueio. Dando F5 | %s",
+                        {self.browser.username},
                     )
-                    time.sleep(pause_time)
+                    self.webdriver.refresh()
                     attempt = 0
             if points > 0:
                 pointsCounter = points
@@ -232,7 +232,7 @@ class Searches:
                     delay = random.uniform(0.2, 1)
                     time.sleep(delay)
                 searchbar.submit()
-                time.sleep(self.browser.utils.randomSeconds(120, 240))
+                time.sleep(self.browser.utils.randomSeconds(120, 220))
 
                 # Scroll down after the search (adjust the number of scrolls as needed)
                 for _ in range(3):  # Scroll down 3 times
@@ -240,7 +240,7 @@ class Searches:
                         "window.scrollTo(0, document.body.scrollHeight);"
                     )
                     time.sleep(
-                        self.browser.utils.randomSeconds(6, 15)
+                        self.browser.utils.randomSeconds(6, 13)
                     )  # Random wait between scrolls
 
                 return self.browser.utils.getBingAccountPoints()
@@ -261,12 +261,12 @@ class Searches:
     def get_related_terms_with_gpt(self, word: str) -> Optional[List[str]]:
         try:
             prompt = f"""
-            Gere 3 termos de pesquisa relacionado a um assunto.
+            Gere 1 termos de pesquisa relacionado a um assunto.
 
             Assunto: '{word}'.
 
-            Os termos de pesquisa devem ser retornados como
-            um Array de strings.
+            O termo de pesquisa devem ser retornado como
+            um Array de string.
 
             CADA TERMO DE PESQUISA DEVE SIMULAR UM USUÁRIO PESQUISANDO SOBRE O ASSUNTO.
 

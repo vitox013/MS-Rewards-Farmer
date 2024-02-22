@@ -33,13 +33,13 @@ class Login:
         while attempts < max_attempts:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 60
                 )  # Adjust timeout as needed
                 alreadyLoggedIn = True
                 break
             except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
+                    self.utils.waitUntilVisible(By.ID, "loginHeader", 15)
                     break
                 except Exception:  # pylint: disable=broad-except
                     try:
@@ -57,6 +57,8 @@ class Login:
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin(notifier=notifier, account=account):
                 return "Locked"
+        else:
+            logging.info("[LOGIN] Already logged-in | %s", self.browser.username)
 
         self.checkBingLogin()
         logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
@@ -64,7 +66,7 @@ class Login:
         time.sleep(10)
         points = self.utils.getAccountPoints()
 
-        logging.info(f"[LOGIN] Logged-in successfully ! | {self.browser.username}")
+        logging.info("[LOGIN] Logged-in successfully ! | %s", {self.browser.username})
         return points
 
     def executeLogin(self, notifier, account):
@@ -83,7 +85,7 @@ class Login:
             email_field.clear()
 
         try:
-            self.enterPassword(self.browser.password)
+            self.enterPassword()
             time.sleep(5)
             self.utils.tryDismissAllMessages()
             time.sleep(5)
@@ -97,7 +99,7 @@ class Login:
                 "[ERROR] Precisa confirmar código email... Saindo da aplicação!"
             )
             sys.exit(1)
-        except:
+        except Exception:  # pylint: disable=broad-except
             pass
 
         errors = 0
@@ -107,10 +109,11 @@ class Login:
             self.utils.waitUntilVisible(
                 By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 60
             )
-            logging.info(f"[LOGIN] Logged in rewardsPortal: {self.browser.username} ")
-        except Exception:
+            logging.info("[LOGIN] Logged in rewardsPortal: %s", {self.browser.username})
+        except Exception:  # pylint: disable=broad-except
             logging.warning(
-                f"[LOGIN] Erro ao logar no rewardsPortal após inserir senha: {self.browser.username}"
+                "[LOGIN] Erro ao logar no rewardsPortal após inserir senha: %s",
+                {self.browser.username},
             )
             errors += 1
 
@@ -122,69 +125,89 @@ class Login:
             )
         except Exception:  # pylint: disable=broad-except
             logging.warning(
-                f"[ERROR] Ao acessar account.microsoft | {self.browser.username}"
+                "[ERROR] Ao acessar account.microsoft | %s", {self.browser.username}
             )
             errors += 1
 
         if errors == 2:
             logging.error(
-                f"[ERROR] Erro ao acessar rewards portal e account.microsoft: {self.browser.username} | restarting..."
+                "[ERROR] Erro ao acessar rewards portal e account.microsoft: %s | restarting...",
+                {self.browser.username},
             )
-            raise Exception()
+            raise Exception()  # pylint: disable=broad-exception-raised
 
-    def enterPassword(self, password):
+    def enterPassword(self):
+        attempt = 0
+
+        time.sleep(3)
+        # Define o valor do campo de senha usando JavaScript
         try:
-            time.sleep(3)
-            # Define o valor do campo de senha usando JavaScript
             try:
-                # self.webdriver.execute_script(
-                #     f'document.getElementsByName("passwd")[0].value = "{password}";'
-                # )
+                self.utils.waitUntilVisible(By.ID, "i0118", 30)
+            except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "i0118", 30)
-                except:
+                    self.utils.waitUntilVisible(By.NAME, "passwd", 30)
+                except Exception:  # pylint: disable=broad-except
                     logging.warning(
-                        f"[PASSWORD] waitUntilVisible failed | {self.browser.username} "
+                        "[PASSWORD] waitUntilVisible i0118 e passwd failed | %s",
+                        {self.browser.username},
                     )
+                    attempt += 1
+            try:
+                pwd_field = self.webdriver.find_element(By.ID, "i0118")
+            except Exception:  # pylint: disable=broad-except
                 try:
-                    pwd_field = self.webdriver.find_element(By.ID, "i0118")
-                except:
-                    logging.warning(
-                        f"[PASSWORD] Erro ao encontrar pwd_field | {self.browser.username} "
+                    pwd_field = self.webdriver.execute_script(
+                        'return document.getElementsByName("passwd")[0];'
                     )
-
-                while True:
-                    logging.info("[LOGIN] " + "Writing password...")
+                except Exception:  # pylint: disable=broad-except
+                    logging.warning(
+                        "[PASSWORD] Error on find pwd_field by ID e Javascript | %s",
+                        {self.browser.username},
+                    )
+            while True:
+                logging.info("[LOGIN] " + "Writing password...")
+                try:
+                    pwd_field.send_keys(self.browser.password)
+                except Exception as e:  # pylint: disable=broad-except
+                    logging.warning(
+                        "[PASSWORD] Erro ao escrever senha | %s : Error: %s",
+                        self.browser.username,
+                        e,
+                    )
+                    attempt += 1
+                if attempt == 2:
+                    logging.error(
+                        "[CRITICAL ERROR LOGIN] Reiniciando browser para tentar logar novamente! | %s",
+                        self.browser.username,
+                    )
+                    raise Exception()
+                time.sleep(1)
+                if (
+                    pwd_field is not None
+                    and pwd_field.get_attribute("value") == self.browser.password
+                ):
+                    # Clica no botão de login
                     try:
-                        pwd_field.send_keys(self.browser.password)
-                    except:
+                        self.webdriver.find_element(By.ID, "idSIButton9").click()
+                    except Exception as e:  # pylint: disable=broad-except
                         logging.warning(
-                            f"[PASSWORD] Erro ao escrever senha | {self.browser.username} "
+                            "[CLICK BUTTON LOGIN] Erro on click idSIButton9 login: %s | Error: %s",
+                            {self.browser.username},
+                            {e},
                         )
-                    time.sleep(1)
-                    if pwd_field.get_attribute("value") == self.browser.password:
-                        # Clica no botão de login
-                        try:
-                            self.webdriver.find_element(By.ID, "idSIButton9").click()
-                        except Exception as e:
-                            logging.warning(
-                                f"[CLICK BUTTON LOGIN] Erro on click idSIButton9 login: {self.browser.username} | Error: {e}"
-                            )
-                        break
-
+                    break
+                elif pwd_field is not None:
                     pwd_field.clear()
-            except Exception as e:
-                logging.warning(
-                    f"[INSERT PASSWORD] Error on inserir password: {self.browser.username} | {e} "
-                )
-
-            # Espera um tempo curto após o clique para permitir que a página carregue
-            time.sleep(3)
-
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logging.warning(
-                f"[INSERT PASSWORD] Erro desconhecido: {self.browser.username} | {e}"
+                "[INSERT PASSWORD] Error on inserir password: %s | %s",
+                {self.browser.username},
+                {e},
             )
+
+        # Espera um tempo curto após o clique para permitir que a página carregue
+        time.sleep(3)
 
     def checkBingLogin(self):
         self.webdriver.get(
