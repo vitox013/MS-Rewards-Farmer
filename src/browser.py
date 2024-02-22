@@ -77,6 +77,9 @@ class Browser:
         options.add_argument("--no-first-run")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-popup-blocking")
+        options.add_argument("--disable-notifications")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--disable-features=PrivacySandboxSettings4")
 
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
@@ -159,6 +162,13 @@ class Browser:
                 "userAgent": self.userAgent,
                 "platform": self.userAgentMetadata["platform"],
                 "userAgentMetadata": self.userAgentMetadata,
+            },
+        )
+
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             },
         )
 

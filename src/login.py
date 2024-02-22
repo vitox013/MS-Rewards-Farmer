@@ -24,23 +24,29 @@ class Login:
         while True:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 30
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
                 )
                 alreadyLoggedIn = True
                 break
             except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "loginHeader", 30)
+                    self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
                     break
                 except Exception:  # pylint: disable=broad-except
-                    attempt += 1
-                    if attempt == 3:
-                        logging.error(
-                            "[CRITICAL ERROR] Closing the browser and retrying..."
-                        )
-                        raise Exception()
-                    if self.utils.tryDismissAllMessages():
-                        continue
+                    try:
+                        self.utils.waitUntilVisible(By.ID, "usernameTitle", 10)
+                        break
+                    except Exception:
+                        attempt += 1
+                        self.webdriver.refresh()
+                        if attempt == 3:
+                            logging.warning(
+                                "[LOGIN] Error on find loginHeader e loginHeader... Trying keep login | %s",
+                                self.browser.username,
+                            )
+                            break
+                        if self.utils.tryDismissAllMessages():
+                            continue
 
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():
@@ -58,24 +64,30 @@ class Login:
         return points
 
     def executeLogin(self):
-        self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
         logging.info("[LOGIN] " + "Entering email...")
-        self.webdriver.find_element(By.NAME, "loginfmt").send_keys(
-            self.browser.username
-        )
-        self.webdriver.find_element(By.ID, "idSIButton9").click()
+        time.sleep(5)
+        self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
+        email_field = self.webdriver.find_element(By.NAME, "loginfmt")
+
+        while True:
+            email_field.send_keys(self.browser.username)
+            time.sleep(1)
+            if email_field.get_attribute("value") == self.browser.username:
+                self.webdriver.find_element(By.ID, "idSIButton9").click()
+                break
+
+            email_field.clear()
+            time.sleep(2)
 
         try:
             self.enterPassword(self.browser.password)
+            time.sleep(5)
+            self.utils.tryDismissAllMessages()
+            time.sleep(5)
         except Exception:  # pylint: disable=broad-except
-            logging.error("[LOGIN] " + "2FA Code required !")
-            with contextlib.suppress(Exception):
-                code = self.webdriver.find_element(
-                    By.ID, "idRemoteNGC_DisplaySign"
-                ).get_attribute("innerHTML")
-                logging.error(f"[LOGIN] 2FA code: {code}")
-            logging.info("[LOGIN] Press enter when confirmed on your device...")
-            input()
+            logging.error(
+                "[ERROR] Erro na etapa de inserir password: %s" % self.browser.username
+            )
 
         while not (
             urllib.parse.urlparse(self.webdriver.current_url).path == "/"
