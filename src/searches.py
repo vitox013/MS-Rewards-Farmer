@@ -12,13 +12,9 @@ import requests
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from sklearn.cluster import KMeans
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import silhouette_score
 from unidecode import unidecode  # Importe a biblioteca unidecode
 
 from src.browser import Browser
-from src.gpt import GPT
 
 
 class Searches:
@@ -26,128 +22,29 @@ class Searches:
         self.browser = browser
         self.webdriver = browser.webdriver
         self.utils = browser.utils
-        self.gpt = GPT()
-
-    def get_search_terms_with_gpt(self, words_count: int) -> Optional[List[str]]:
-        """
-        Generate a list of search terms based on current hot topics in Brazil.
-
-        Args:
-            words_count (int): Number of search terms to generate.
-
-        Returns:
-            Optional[List[str]]: A list of search terms as strings, or None if an error occurs.
-        """
-        today_date = datetime.now().strftime("%d/%m")
-        try:
-            prompt = f"""
-            Gere {words_count} termos de pesquisa unicos sobre os tópicos mais populares no Brasil hoje, dia {today_date},
-
-            Os termos de pesquisa devem ser retornados como
-            um Array de strings.
-
-            CADA TERMO DE PESQUISA DEVE SIMULAR UM USUÁRIO PESQUISANDO SOBRE O TÓPICO.
-
-            VOCÊ DEVE APENAS RETORNAR O ARRAY DE STRINGS INICIANDO COM [ E FINALIZANDO COM ].
-
-            Não utilize "Como fazer...".
-
-            Aqui está um exemplo de um Array de strings:
-            ["Quando é...", "Qual...", "Quem...", "Quais...", "O que é..."]
-            """
-            padrao = r"\[([^]]+)\]"
-            array_text = None
-
-            terms = asyncio.run(self.gpt.generate_response(prompt=prompt))
-
-            if terms is not None:
-                match = re.search(padrao, terms)
-                if match:
-                    array_text = "[" + match.group(1) + "]"
-
-                if array_text is not None:
-                    array_terms = json.loads(array_text)
-                else:
-                    array_terms = json.loads(terms)
-
-                if isinstance(array_terms, list):
-                    logging.info(
-                        f"[BING] Requested {words_count} searchs and generated {len(array_terms)} with g4f!  | {self.browser.username}"
-                    )
-                    return array_terms
-        except Exception as e:
-            logging.warning(
-                f"An error occurred on get searchs terms with gpt | {self.browser.username}"
-            )
-
-        return None
 
     def getGoogleTrends(self, wordsCount: int) -> list:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
         i = 0
-        while True:
+        while len(searchTerms) < wordsCount:
             i += 1
             # Fetching daily trends from Google Trends API
             r = requests.get(
-                f'https://trends.google.com/trends/api/dailytrends?hl=pt-BR&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo=BR'
+                f'https://trends.google.com/trends/api/dailytrends?hl={self.browser.localeLang}&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo={self.browser.localeGeo}&ns=15'
             )
             trends = json.loads(r.text[6:])
             for topic in trends["default"]["trendingSearchesDays"][0][
                 "trendingSearches"
             ]:
-                title_query = topic["title"]["query"].lower()
-                searchTerms.append(unidecode(title_query))  # Normalize o termo
-                related_queries = [
+                searchTerms.append(topic["title"]["query"].lower())
+                searchTerms.extend(
                     relatedTopic["query"].lower()
                     for relatedTopic in topic["relatedQueries"]
-                ]
-                searchTerms.extend(
-                    unidecode(related_query) for related_query in related_queries
-                )  # Normalize os termos relacionados
-
-            # Remover palavras únicas e com menos de 5 letras
-            searchTerms = [term for term in searchTerms if len(term) >= 5]
-
-            # Use TF-IDF to represent terms as vectors
-            vectorizer = TfidfVectorizer(stop_words="english")
-            X = vectorizer.fit_transform(searchTerms)
-
-            # Find optimal number of clusters
-            max_clusters = wordsCount
-            best_score = -1
-            best_k = 2
-            for k in range(2, max_clusters + 1):
-                kmeans = KMeans(n_clusters=k, random_state=42)
-                kmeans.fit(X)
-                score = silhouette_score(X, kmeans.labels_)
-                if score > best_score:
-                    best_score = score
-                    best_k = k
-
-            # Cluster terms
-            kmeans = KMeans(n_clusters=best_k, random_state=42)
-            kmeans.fit(X)
-            cluster_labels = kmeans.labels_
-
-            # Selecionar um termo de cada cluster
-            selected_terms = []
-            cluster_centers = kmeans.cluster_centers_
-            for i in range(best_k):
-                cluster_indices = [
-                    index for index, label in enumerate(cluster_labels) if label == i
-                ]
-                center_index = min(
-                    cluster_indices,
-                    key=lambda x: np.linalg.norm(X[x] - cluster_centers[i]),
                 )
-                selected_terms.append(searchTerms[center_index])
-
-            if len(selected_terms) >= wordsCount:
-                logging.info(
-                    f"[BING] Requested {wordsCount} searchs and generated {len(selected_terms)} with kmeans! | {self.browser.username}"
-                )
-                return selected_terms
+            searchTerms = list(set(searchTerms))
+        del searchTerms[wordsCount : (len(searchTerms) + 1)]
+        return searchTerms
 
     def getRelatedTerms(self, word: str) -> list:
         # Function to retrieve related terms from Bing API
@@ -166,11 +63,7 @@ class Searches:
             f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
         )
 
-        search_terms = self.get_search_terms_with_gpt(numberOfSearches)
-
-        if search_terms is None:
-            logging.warning(f"[INFO] Using GoogleTrends on | {self.browser.username} ")
-            search_terms = self.getGoogleTrends(numberOfSearches)
+        search_terms = self.getGoogleTrends(numberOfSearches)
 
         self.webdriver.get("https://bing.com")
 
@@ -186,9 +79,7 @@ class Searches:
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
             points = self.bingSearch(word)
             if points <= pointsCounter:
-                relatedTerms = self.get_related_terms_with_gpt(word)
-                if relatedTerms is None:
-                    relatedTerms = self.getRelatedTerms(word)[:1]
+                relatedTerms = self.getRelatedTerms(word)[:1]
                 j = 0
                 break_triggered = False  # Flag para indicar se o break foi acionado
                 for term in relatedTerms:
@@ -257,41 +148,3 @@ class Searches:
                 i += 1
                 self.webdriver.refresh()
                 continue
-
-    def get_related_terms_with_gpt(self, word: str) -> Optional[List[str]]:
-        try:
-            prompt = f"""
-            Gere 1 termos de pesquisa relacionado a um assunto.
-
-            Assunto: '{word}'.
-
-            O termo de pesquisa devem ser retornado como
-            um Array de string.
-
-            CADA TERMO DE PESQUISA DEVE SIMULAR UM USUÁRIO PESQUISANDO SOBRE O ASSUNTO.
-
-            VOCÊ DEVE APENAS RETORNAR O ARRAY DE STRINGS INICIANDO COM [ E FINALIZANDO COM ].
-            """
-            padrao = r"\[([^]]+)\]"
-            array_text = None
-
-            terms = asyncio.run(self.gpt.generate_response(prompt=prompt))
-
-            if terms is not None:
-                match = re.search(padrao, terms)
-                if match:
-                    array_text = "[" + match.group(1) + "]"
-
-                if array_text is not None:
-                    array_terms = json.loads(array_text)
-                else:
-                    array_terms = json.loads(terms)
-
-                if isinstance(array_terms, list):
-                    return array_terms
-        except Exception:
-            logging.warning(
-                f"An error occurred on get related terms with gpt | {self.browser.username}"
-            )
-
-        return None

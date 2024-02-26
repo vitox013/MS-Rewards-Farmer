@@ -193,7 +193,6 @@ runbot.bat
 .DS_Store
 accounts.json.sample
 accounts-backup.json
-Dockerfile
 Dockerfile  3
 Dockerfile FUNCIONAL
 Dockerfile copy 2
