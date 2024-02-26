@@ -59,8 +59,8 @@ class Browser:
     ) -> WebDriver:
         # Configure and setup the Chrome browser
         options = webdriver.ChromeOptions()
-        options.headless = self.headless
-        # options.headless = False
+        # options.headless = self.headless
+        options.headless = False
         options.add_argument("--lang=pt-BR")
         options.add_experimental_option("prefs", {"intl.accept_languages": "pt,pt_BR"})
         # Reduzindo argumentos desnecessários

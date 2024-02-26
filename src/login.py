@@ -71,22 +71,23 @@ class Login:
 
         while True:
             email_field.send_keys(self.browser.username)
-            time.sleep(1)
+            time.sleep(3)
             if email_field.get_attribute("value") == self.browser.username:
                 self.webdriver.find_element(By.ID, "idSIButton9").click()
                 break
 
             email_field.clear()
-            time.sleep(2)
+            time.sleep(3)
 
         try:
             self.enterPassword(self.browser.password)
-            time.sleep(5)
+            time.sleep(25)
             self.utils.tryDismissAllMessages()
-            time.sleep(5)
-        except Exception:  # pylint: disable=broad-except
+            time.sleep(10)
+            self.webdriver.get("https://account.microsoft.com")
+        except Exception as e:  # pylint: disable=broad-except
             logging.error(
-                "[ERROR] Erro na etapa de inserir password: %s" % self.browser.username
+                f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
 
         while not (
@@ -111,17 +112,112 @@ class Login:
         )
 
     def enterPassword(self, password):
-        self.utils.waitUntilClickable(By.NAME, "passwd", 10)
-        self.utils.waitUntilClickable(By.ID, "idSIButton9", 10)
         # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
         # If password contains special characters like " ' or \, send_keys() will not work
-        password = password.replace("\\", "\\\\").replace('"', '\\"')
-        self.webdriver.execute_script(
-            f'document.getElementsByName("passwd")[0].value = "{password}";'
-        )
+
         logging.info("[LOGIN] " + "Writing password...")
-        self.webdriver.find_element(By.ID, "idSIButton9").click()
-        time.sleep(3)
+        # self.webdriver.find_element(By.ID, "idSIButton9").click()
+        time.sleep(6)
+
+        while True:
+            attempt = 0
+            pwd_field = self.get_pwd_field()
+            if pwd_field:
+                try:
+                    pwd_field.clear()
+                except Exception:
+                    pass
+                if self.insert_pwd(pwd_field):
+                    time.sleep(5)
+                    if not self.click_next():
+                        attempt += 1
+                        if attempt == 5:
+                            raise Exception()
+                        continue
+                    if self.had_error_on_insert_pwd():
+                        logging.warning(
+                            "[LOGIN] Tentando inserir senha novamente... | %s",
+                            self.browser.username,
+                        )
+                        continue
+                    break
+            else:
+                attempt += 1
+                time.sleep(10)
+                if attempt == 5:
+                    raise Exception()
+                continue
+
+    def click_next(self):
+        with contextlib.suppress(Exception):
+            self.utils.waitUntilClickable(By.ID, "idSIButton9")
+        try:
+            button = self.webdriver.find_element(By.ID, "idSIButton9")
+            button.click()
+            logging.info("[Login] I clicked log in | %s", self.browser.username)
+            return True
+        except Exception:
+            try:
+                button = self.webdriver.find_element(By.ID, "idSIButton9")
+                self.webdriver.execute_script("arguments[0].click();", button)
+                logging.info("[Login] I clicked log in | %s", self.browser.username)
+                return True
+            except Exception as e:
+                logging.warning(
+                    f"[Error] On click next button: {self.browser.username} | {e}"
+                )
+                return False
+
+    def get_pwd_field(self):
+        try:
+            self.utils.waitUntilClickable(
+                By.XPATH, '//input[@id="i0118"] | //input[@name="passwd"]'
+            )
+            pwd_field = self.webdriver.find_element(
+                By.XPATH, '//input[@id="i0118"] | //input[@name="passwd"]'
+            )
+            return pwd_field
+        except Exception:
+            # Melhorando a lógica de busca com document.evaluate
+            script = """
+            var xpath = '//input[@id="i0118"] | //input[@name="passwd"]';
+            var result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            return result.singleNodeValue;
+            """
+            try:
+                pwd_field = self.webdriver.execute_script(script)
+                if pwd_field:
+                    return pwd_field
+            except Exception:
+                logging.warning(
+                    "[LOGIN] Password field not found... Trying again | %s",
+                    self.browser.username,
+                )
+                return None
+
+    def insert_pwd(self, pwd_field):
+        try:
+            pwd_field.send_keys(self.browser.password)
+            return True
+        except Exception:
+            try:
+                self.webdriver.execute_script(
+                    f'document.getElementsByName("passwd")[0].value = "{self.browser.password}";'
+                )
+                return True
+            except Exception as e:
+                return False
+
+    def had_error_on_insert_pwd(self):
+        try:
+            self.utils.waitUntilVisible(By.XPATH, '//*[@id="passwordError"]', 10)
+            return True
+        except Exception:
+            try:
+                self.utils.waitUntilVisible(By.XPATH, "//div[@role='alert']", 10)
+                return True
+            except Exception:
+                return False
 
     def checkBingLogin(self):
         self.webdriver.get(

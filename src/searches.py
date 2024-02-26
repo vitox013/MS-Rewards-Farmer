@@ -204,7 +204,7 @@ class Searches:
                     attempt += 1
                 if attempt == 2:
                     logging.warning(
-                        "[BING RELATED] Possível bloqueio. Dando F5 | %s",
+                        "[BING RELATED] Possible blockage. Refreshing the page | %s",
                         {self.browser.username},
                     )
                     self.webdriver.refresh()

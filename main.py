@@ -15,15 +15,8 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import (
-    Browser,
-    DailySet,
-    Login,
-    MorePromotions,
-    PunchCards,
-    Searches,
-    VersusGame,
-)
+from src import (Browser, DailySet, Login, MorePromotions, PunchCards,
+                 Searches, VersusGame)
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -36,7 +29,7 @@ def main():
     notifier = Notifier(args)
     setupLogging(args.verbosenotifs, notifier)
     # Register the cleanup function to be called on script exit
-    atexit.register(cleanupChromeProcesses)
+    atexit.register(cleanup_chrome_processes)
 
     # Load previous day's points data
     previous_points_data = load_previous_points_data()
@@ -126,13 +119,14 @@ def setupLogging(verbose_notifs, notifier):
     )
 
 
-def cleanupChromeProcesses():
-    # Use psutil to find and terminate Chrome processes
+def cleanup_chrome_processes():
+    # Use psutil to find and terminate Chrome and Chromium processes
     for process in psutil.process_iter(["pid", "name"]):
-        if process.info["name"] == "chrome.exe":
+        process_info = process.as_dict(attrs=["pid", "name"])
+        if process_info["name"] in ["chrome", "chromium"]:
             try:
-                psutil.Process(process.info["pid"]).terminate()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                psutil.Process(process_info["pid"]).terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
 
 
@@ -377,7 +371,7 @@ def process_account(currentAccount, notifier, args, previous_points_data):
 
 def retry_thread(currentAccount, notifier, args, previous_points_data):
     # Adicione aqui a lógica para tentar novamente
-    logging.warning(f"Tentando novamente... | { currentAccount.get('username', '') }")
+    logging.warning(f"Trying again... | { currentAccount.get('username', '') }")
     process_account(currentAccount, notifier, args, previous_points_data)
 
 

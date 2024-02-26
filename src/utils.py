@@ -260,7 +260,12 @@ class Utils:
                 elements = self.webdriver.find_elements(button[0], button[1])
                 try:
                     for element in elements:
-                        element.click()
+                        try:
+                            self.webdriver.execute_script(
+                                "arguments[0].click();", element
+                            )
+                        except Exception:
+                            element.click()
                 except Exception:
                     continue
                 result = True

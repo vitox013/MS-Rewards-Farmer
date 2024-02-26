@@ -197,7 +197,9 @@ Dockerfile
 Dockerfile  3
 Dockerfile FUNCIONAL
 Dockerfile copy 2
+Dockerfile LAST
 .venv
 .devcontainer/
 *json
 docker-compose.yml
+*.txt
