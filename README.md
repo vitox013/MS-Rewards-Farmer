@@ -134,4 +134,102 @@
 - [ ] Setup flags for mobile/desktop search only
 - [ ] Pull Telegram and Discord info to json files so you don't need to input them on command line. (partial groundwork done)
 
-## DOCKER USAGE
+## Differences from the original repository
+
+- Run multiple accounts in parallel **ATTENTION - Do not run accounts with the same IP at the same time**
+- Can visualize with TigerVNC
+
+## Docker Usage
+
+**ATENTION**
+_Everything between <> is to be changed_
+
+1. Build the image
+   - Arguments:
+     - VNC_PASSWORD
+     - name_of_image
+   - Run:
+     - `docker build --build-arg VNC_PASSWORD=<your_password> -t <name_of_image>:latest .`
+2. Create a docker-compose.yml
+
+   Here you can create as many containers as you want, but each one will have to have a different port and vnc argument.
+
+   In my example I create two containers each with different ports and pay attention to the command line, the arguments :1 change to :2 and so on
+
+    Create accounts files like: accounts.json, accounts2.json and put on volumes
+
+    
+    ```docker-compose.yml
+      services:
+        rewards-farmer:
+          image: <name_of_image>:latest
+          container_name: <your_name_container>
+          shm_size: 8gb
+          command: bash -c "startlxde & vncserver -SecurityTypes=VeNCrypt,TLSVnc :1 -localhost no -geometry 1280x800 -depth 24 && DISPLAY=:1 bash -c 'python3 main.py <args of bot like -v -t >'"
+          ports:
+            - "5901:5901"
+          volumes:
+            - ./accounts.json:/app/accounts.json
+            - ./logs:/app/logs
+          restart: 'no'
+
+        rewards-farmer2:
+          image: <name_of_image>:latest
+          container_name: <your_name_container2>
+          shm_size: 8gb
+          command: bash -c "startlxde & vncserver -SecurityTypes=VeNCrypt,TLSVnc :2 -localhost no -geometry 1280x800 -depth 24 && DISPLAY=:2 bash -c 'python3 main.py <args of bot like -v -t >'"
+          ports:
+            - "5902:5902"
+          volumes:
+            - ./accounts2.json:/app/accounts.json
+            - ./logs2:/app/logs
+          restart: 'no'
+    ```
+
+3. Schedule execution with crontab
+
+  - Type the command 
+    ```bash
+    crontab -e
+    ```
+
+  - Paste this with your own paths and names of
+    ```text
+      # MICROSOFT BOT
+
+      0 5 * * * sleep $(shuf -i 1-15 -n 1)m && /usr/bin/docker-compose -f /<path_to_repository>/docker-compose.yml up -d --build <name_of_container1>
+
+      # MICROSOFT BOT 2
+
+      0 10 * * * sleep $(shuf -i 1-15 -n 1)m && /usr/bin/docker-compose -f /<path_to_repository>/docker-compose.yml up -d --build <name_of_container2>
+
+
+      # MICROSOFT BOT 3
+
+      0 15 * * * sleep $(shuf -i 1-15 -n 1)m && /usr/bin/docker-compose -f /<path_to_repository>/docker-compose.yml up -d --build <name_of_container3>
+
+
+      # MICROSOFT BOT 4
+
+      0 20 * * * sleep $(shuf -i 1-15 -n 1)m && /usr/bin/docker-compose -f /<path_to_repository>/docker-compose.yml up -d --build <name_of_container4>
+
+    ```
+
+4. How to graphically visualize the container
+
+   The container must be running and with the ports open
+
+  - Install [TigerVNC](https://tigervnc.org/) locally on your machine - _just the TigerVNC viewer_
+  - Open the port that will be used for remote access.
+
+    - On your vps type the command:
+
+    ```bash
+    sudo firewall-cmd --remove-port=<port>/tcp --zone=public --permanent
+    ```
+
+    - You may need to configure your VPS provider (DigitalOcean, Oracle, Contabo) as well
+
+    _ATTENTION, there are other ways to connect with more security, such as ssh tunnels, but I leave that for you to research_
+
+  - Open the TigerVNC viewer and connect using public ip:port and then insert your previously configured VNC PASSWORD
