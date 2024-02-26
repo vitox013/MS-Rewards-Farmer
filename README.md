@@ -156,7 +156,7 @@ _Everything between <> is to be changed_
 
    In my example I create two containers each with different ports and pay attention to the command line, the arguments :1 change to :2 and so on
 
-    Create accounts files like: accounts.json, accounts2.json and put on volumes
+    Create accounts files like: accounts.json, accounts2.json, accounts3.json, ... , and put on volumes
 
     
     ```docker-compose.yml
@@ -184,6 +184,8 @@ _Everything between <> is to be changed_
             - ./accounts2.json:/app/accounts.json
             - ./logs2:/app/logs
           restart: 'no'
+       rewards-farmer3:
+          ...
     ```
 
 3. Schedule execution with crontab
