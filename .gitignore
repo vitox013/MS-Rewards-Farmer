@@ -203,3 +203,5 @@ Dockerfile LAST
 *json
 docker-compose.yml
 *.txt
+src/api.py
+teste.py

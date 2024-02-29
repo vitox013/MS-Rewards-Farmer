@@ -86,68 +86,24 @@ class Searches:
         # Function to retrieve Google Trends search terms
         searchTerms: list[str] = []
         i = 0
-        while True:
+        while len(searchTerms) < wordsCount:
             i += 1
             # Fetching daily trends from Google Trends API
             r = requests.get(
-                f'https://trends.google.com/trends/api/dailytrends?hl=pt-BR&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo=BR'
+                f'https://trends.google.com/trends/api/dailytrends?hl={self.browser.localeLang}&ed={(date.today() - timedelta(days=i)).strftime("%Y%m%d")}&geo={self.browser.localeGeo}&ns=15'
             )
             trends = json.loads(r.text[6:])
             for topic in trends["default"]["trendingSearchesDays"][0][
                 "trendingSearches"
             ]:
-                title_query = topic["title"]["query"].lower()
-                searchTerms.append(unidecode(title_query))  # Normalize o termo
-                related_queries = [
+                searchTerms.append(topic["title"]["query"].lower())
+                searchTerms.extend(
                     relatedTopic["query"].lower()
                     for relatedTopic in topic["relatedQueries"]
-                ]
-                searchTerms.extend(
-                    unidecode(related_query) for related_query in related_queries
-                )  # Normalize os termos relacionados
-
-            # Remover palavras únicas e com menos de 5 letras
-            searchTerms = [term for term in searchTerms if len(term) >= 5]
-
-            # Use TF-IDF to represent terms as vectors
-            vectorizer = TfidfVectorizer(stop_words="english")
-            X = vectorizer.fit_transform(searchTerms)
-
-            # Find optimal number of clusters
-            max_clusters = wordsCount
-            best_score = -1
-            best_k = 2
-            for k in range(2, max_clusters + 1):
-                kmeans = KMeans(n_clusters=k, random_state=42)
-                kmeans.fit(X)
-                score = silhouette_score(X, kmeans.labels_)
-                if score > best_score:
-                    best_score = score
-                    best_k = k
-
-            # Cluster terms
-            kmeans = KMeans(n_clusters=best_k, random_state=42)
-            kmeans.fit(X)
-            cluster_labels = kmeans.labels_
-
-            # Selecionar um termo de cada cluster
-            selected_terms = []
-            cluster_centers = kmeans.cluster_centers_
-            for i in range(best_k):
-                cluster_indices = [
-                    index for index, label in enumerate(cluster_labels) if label == i
-                ]
-                center_index = min(
-                    cluster_indices,
-                    key=lambda x: np.linalg.norm(X[x] - cluster_centers[i]),
                 )
-                selected_terms.append(searchTerms[center_index])
-
-            if len(selected_terms) >= wordsCount:
-                logging.info(
-                    f"[BING] Requested {wordsCount} searchs and generated {len(selected_terms)} with kmeans! | {self.browser.username}"
-                )
-                return selected_terms
+            searchTerms = list(set(searchTerms))
+        del searchTerms[wordsCount : (len(searchTerms) + 1)]
+        return searchTerms
 
     def getRelatedTerms(self, word: str) -> list:
         # Function to retrieve related terms from Bing API
@@ -166,11 +122,7 @@ class Searches:
             f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
         )
 
-        search_terms = self.get_search_terms_with_gpt(numberOfSearches)
-
-        if search_terms is None:
-            logging.warning(f"[INFO] Using GoogleTrends on | {self.browser.username} ")
-            search_terms = self.getGoogleTrends(numberOfSearches)
+        search_terms = self.getGoogleTrends(numberOfSearches)
 
         self.webdriver.get("https://bing.com")
 
@@ -186,9 +138,7 @@ class Searches:
             logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
             points = self.bingSearch(word)
             if points <= pointsCounter:
-                relatedTerms = self.get_related_terms_with_gpt(word)
-                if relatedTerms is None:
-                    relatedTerms = self.getRelatedTerms(word)[:1]
+                relatedTerms = self.getRelatedTerms(word)[:1]
                 j = 0
                 break_triggered = False  # Flag para indicar se o break foi acionado
                 for term in relatedTerms:

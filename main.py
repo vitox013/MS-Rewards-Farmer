@@ -15,8 +15,16 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import (Browser, DailySet, Login, MorePromotions, PunchCards,
-                 Searches, VersusGame)
+from src import (
+    Browser,
+    DailySet,
+    Login,
+    MorePromotions,
+    PunchCards,
+    Searches,
+    VersusGame,
+)
+from src.api import create_account, update_points
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -46,7 +54,7 @@ def main():
         )
         threads.append(thread)
         thread.start()
-        time.sleep(30)
+        time.sleep(90)
 
     # Aguarda todas as threads de loadedAccounts concluírem
     for thread in threads:
@@ -232,6 +240,11 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
         logging.info(
             f"[POINTS] You have {desktopBrowser.utils.formatNumber(accountPointsCounter)} points on your account"
         )
+        try:
+            create_account(currentAccount.get("username", ""), accountPointsCounter)
+        except Exception as e:
+            logging.warning(f"Erro ao criar na api: {e}")
+            pass
         DailySet(desktopBrowser).completeDailySet()
         PunchCards(desktopBrowser).completePunchCards()
         MorePromotions(desktopBrowser).completeMorePromotions()
@@ -350,7 +363,15 @@ def process_account(currentAccount, notifier, args, previous_points_data):
 
             # Update the previous day's points data
             previous_points_data[account_name] = earned_points
-
+            try:
+                update_points(
+                    currentAccount.get("username", ""),
+                    earned_points,
+                    points_difference,
+                )
+            except Exception:
+                logging.warning("Erro ao atualizar na api")
+                pass
             logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
             break  # Sair do loop se a execução for bem-sucedida
         except Exception as e:

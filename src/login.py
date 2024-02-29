@@ -24,29 +24,35 @@ class Login:
         while True:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 10
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 14
                 )
                 alreadyLoggedIn = True
                 break
             except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
+                    self.utils.waitUntilVisible(By.ID, "i0116", 10)
                     break
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     try:
-                        self.utils.waitUntilVisible(By.ID, "usernameTitle", 10)
+                        self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
                         break
-                    except Exception:
-                        attempt += 1
-                        self.webdriver.refresh()
-                        if attempt == 3:
-                            logging.warning(
-                                "[LOGIN] Error on find loginHeader e loginHeader... Trying keep login | %s",
-                                self.browser.username,
-                            )
+                    except Exception:  # pylint: disable=broad-except
+                        try:
+                            self.utils.waitUntilVisible(By.ID, "usernameTitle", 10)
                             break
-                        if self.utils.tryDismissAllMessages():
-                            continue
+                        except Exception:
+                            try:
+                                self.utils.waitUntilVisible(By.NAME, "loginfmt", 10)
+                            except Exception:
+                                attempt += 1
+                                if attempt == 3:
+                                    logging.warning(
+                                        "[LOGIN] Error on find loginHeader e loginHeader... Raising exception | %s",
+                                        self.browser.username,
+                                    )
+                                    raise Exception()
+                                if self.utils.tryDismissAllMessages():
+                                    continue
 
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():
@@ -65,7 +71,6 @@ class Login:
 
     def executeLogin(self):
         logging.info("[LOGIN] " + "Entering email...")
-        time.sleep(5)
         self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
         email_field = self.webdriver.find_element(By.NAME, "loginfmt")
 
@@ -81,10 +86,8 @@ class Login:
 
         try:
             self.enterPassword(self.browser.password)
-            time.sleep(25)
+            time.sleep(5)
             self.utils.tryDismissAllMessages()
-            time.sleep(10)
-            self.webdriver.get("https://account.microsoft.com")
         except Exception as e:  # pylint: disable=broad-except
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
@@ -117,7 +120,7 @@ class Login:
 
         logging.info("[LOGIN] " + "Writing password...")
         # self.webdriver.find_element(By.ID, "idSIButton9").click()
-        time.sleep(6)
+        time.sleep(3)
 
         while True:
             attempt = 0
@@ -188,6 +191,8 @@ class Login:
                 pwd_field = self.webdriver.execute_script(script)
                 if pwd_field:
                     return pwd_field
+                else:
+                    return None
             except Exception:
                 logging.warning(
                     "[LOGIN] Password field not found... Trying again | %s",
