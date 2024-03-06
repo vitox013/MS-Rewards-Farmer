@@ -287,6 +287,14 @@ class Utils:
             self.webdriver.find_element(By.ID, "bnp_btn_accept").click()
             time.sleep(2)
 
+    def focus_on_login(self):
+        self.create_new_tab()
+        self.switchToNewTab()
+        self.closeCurrentTab()
+
+    def create_new_tab(self):
+        self.webdriver.execute_script("window.open('');")
+
     def switchToNewTab(self, timeToWait: int = 0):
         # Switch to a new tab and optionally wait for a specified time
         time.sleep(0.5)

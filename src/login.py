@@ -71,23 +71,29 @@ class Login:
 
     def executeLogin(self):
         logging.info("[LOGIN] " + "Entering email...")
-        self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
-        email_field = self.webdriver.find_element(By.NAME, "loginfmt")
 
-        while True:
-            email_field.send_keys(self.browser.username)
-            time.sleep(3)
-            if email_field.get_attribute("value") == self.browser.username:
-                self.webdriver.find_element(By.ID, "idSIButton9").click()
-                break
+        try:
+            self.utils.focus_on_login()
+            self.utils.waitUntilClickable(By.NAME, "loginfmt", 10)
+            email_field = self.webdriver.find_element(By.NAME, "loginfmt")
 
-            email_field.clear()
-            time.sleep(3)
+            while True:
+                email_field.send_keys(self.browser.username)
+                time.sleep(3)
+                if email_field.get_attribute("value") == self.browser.username:
+                    self.webdriver.find_element(By.ID, "idSIButton9").click()
+                    break
+
+                email_field.clear()
+                time.sleep(3)
+        except Exception:  # pylint: disable=broad-except
+            pass
 
         try:
             self.enterPassword(self.browser.password)
-            time.sleep(5)
+            self.utils.focus_on_login()
             self.utils.tryDismissAllMessages()
+            self.webdriver.get("https://account.microsoft.com")
         except Exception as e:  # pylint: disable=broad-except
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
@@ -173,6 +179,7 @@ class Login:
 
     def get_pwd_field(self):
         try:
+            self.utils.focus_on_login()
             self.utils.waitUntilClickable(
                 By.XPATH, '//input[@id="i0118"] | //input[@name="passwd"]'
             )
@@ -191,8 +198,8 @@ class Login:
                 pwd_field = self.webdriver.execute_script(script)
                 if pwd_field:
                     return pwd_field
-                else:
-                    return None
+
+                return None
             except Exception:
                 logging.warning(
                     "[LOGIN] Password field not found... Trying again | %s",
@@ -215,11 +222,11 @@ class Login:
 
     def had_error_on_insert_pwd(self):
         try:
-            self.utils.waitUntilVisible(By.XPATH, '//*[@id="passwordError"]', 10)
+            self.utils.waitUntilVisible(By.XPATH, '//*[@id="passwordError"]', 5)
             return True
         except Exception:
             try:
-                self.utils.waitUntilVisible(By.XPATH, "//div[@role='alert']", 10)
+                self.utils.waitUntilVisible(By.XPATH, "//div[@role='alert']", 5)
                 return True
             except Exception:
                 return False

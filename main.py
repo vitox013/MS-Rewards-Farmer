@@ -33,6 +33,7 @@ POINTS_COUNTER = 0
 
 
 def main():
+    cleanup_zombie_processes()
     args = argumentParser()
     notifier = Notifier(args)
     setupLogging(args.verbosenotifs, notifier)
@@ -135,6 +136,31 @@ def cleanup_chrome_processes():
             try:
                 psutil.Process(process_info["pid"]).terminate()
             except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+
+def cleanup_zombie_processes():
+    # Iterate over all processes
+    for process in psutil.process_iter(["pid", "name", "status"]):
+        process_info = process.as_dict(attrs=["pid", "name", "status"])
+
+        # Check if the process is a zombie
+        if process_info["status"] == psutil.STATUS_ZOMBIE:
+            try:
+                # Attempt to terminate the zombie process
+                process.terminate()
+                # Wait for the process to terminate and check if it's gone
+                gone, alive = psutil.wait_procs([process], timeout=3)
+                if process in gone:
+                    logging.info(
+                        f"Process {process_info['pid']} ({process_info['name']}) was terminated."
+                    )
+                else:
+                    logging.info(
+                        f"Failed to terminate process {process_info['pid']} ({process_info['name']})."
+                    )
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                # Ignore if the process does not exist or access is denied
                 pass
 
 
@@ -373,6 +399,10 @@ def process_account(currentAccount, notifier, args, previous_points_data):
                 logging.warning("Erro ao atualizar na api")
                 pass
             logging.info(f"[POINTS] Data for '{account_name}' appended to the file.")
+            try:
+                cleanup_zombie_processes()
+            except Exception:
+                pass
             break  # Sair do loop se a execução for bem-sucedida
         except Exception as e:
             retries -= 1

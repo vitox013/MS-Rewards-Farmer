@@ -1,10 +1,12 @@
 import contextlib
 import logging
 import random
+import re
 from pathlib import Path
 from typing import Any
 
 import ipapi
+import requests
 import seleniumwire.undetected_chromedriver as webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -22,12 +24,15 @@ class Browser:
         self.headless = not args.visible
         self.username = account["username"]
         self.password = account["password"]
-        self.localeLang, self.localeGeo = self.getCCodeLang(args.lang, args.geo)
         self.proxy = None
         if args.proxy:
             self.proxy = args.proxy
         elif account.get("proxy"):
             self.proxy = account["proxy"]
+        self.localeLang, self.localeGeo = self.getCCodeLang(
+            ip=self.extrair_ip(self.proxy), lang=args.lang, geo=args.geo
+        )
+        logging.info(f"[LANGUAGE]: {self.localeLang} | [GEO]: {self.localeGeo}")
         self.userDataDir = self.setupProfiles()
         self.browserConfig = Utils.getBrowserConfig(self.userDataDir)
         (
@@ -61,8 +66,14 @@ class Browser:
         options = webdriver.ChromeOptions()
         # options.headless = self.headless
         options.headless = False
-        options.add_argument("--lang=pt-BR")
-        options.add_experimental_option("prefs", {"intl.accept_languages": "pt,pt_BR"})
+        options.add_argument(f"--lang={self.localeLang}-{self.localeGeo}")
+        options.add_experimental_option(
+            "prefs",
+            {
+                "intl.accept_languages": f"{self.localeLang},{self.localeLang}-{self.localeGeo}"
+            },
+        )
+
         # Reduzindo argumentos desnecessários
         options.add_argument("--ignore-certificate-errors")
         options.add_argument("--ignore-ssl-errors")
@@ -90,6 +101,12 @@ class Browser:
                 "https": self.proxy,
                 "no_proxy": "localhost,127.0.0.1",
             }
+            try:
+                timezone = self.get_timezone_from_ip(self.extrair_ip(self.proxy))
+                if timezone:
+                    options.add_argument(f"--timezone={timezone}")
+            except Exception:
+                pass
 
         driver = webdriver.Chrome(
             options=options,
@@ -193,10 +210,13 @@ class Browser:
         sessionsDir.mkdir(parents=True, exist_ok=True)
         return sessionsDir
 
-    def getCCodeLang(self, lang: str, geo: str) -> tuple:
+    def getCCodeLang(self, ip, lang: str, geo: str) -> tuple:
         if lang is None or geo is None:
             try:
-                nfo = ipapi.location()
+                if ip:
+                    nfo = ipapi.location(ip)
+                else:
+                    nfo = ipapi.location()
                 if isinstance(nfo, dict):
                     if lang is None:
                         lang = nfo["languages"].split(",")[0].split("-")[0]
@@ -205,3 +225,17 @@ class Browser:
             except Exception:  # pylint: disable=broad-except
                 return ("pt", "BR")
         return (lang, geo)
+
+    def get_timezone_from_ip(self, ip):
+        response = requests.get(f"http://ip-api.com/json/{ip}")
+        data = response.json()
+        return data.get("timezone")
+
+    def extrair_ip(self, url):
+        # Expressão regular para encontrar o endereço IP
+        padrao = r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}"
+        match = re.search(padrao, url)
+        if match:
+            return match.group()
+        else:
+            return None
