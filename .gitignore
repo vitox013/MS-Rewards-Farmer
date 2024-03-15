@@ -203,7 +203,6 @@ Dockerfile LAST
 *json
 docker-compose.yml
 *.txt
-src/api.py
 teste.py
 Dockerfile BR
 docker-compose copy.yml
