@@ -119,7 +119,7 @@ class Searches:
     def bingSearches(self, numberOfSearches: int, pointsCounter: int = 0):
         # Function to perform Bing searches
         logging.info(
-            f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches..."
+            f"[BING] Starting {self.browser.browserType.capitalize()} Edge Bing searches... | {self.browser.username}"
         )
 
         search_terms = self.getGoogleTrends(numberOfSearches)

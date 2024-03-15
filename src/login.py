@@ -30,29 +30,23 @@ class Login:
                 break
             except Exception:  # pylint: disable=broad-except
                 try:
-                    self.utils.waitUntilVisible(By.ID, "i0116", 10)
+                    self.utils.focus_on_login()
+                    self.utils.waitUntilVisible(
+                        By.XPATH,
+                        '//*[@id="i0116"] | //*[@id="loginHeader"] | //*[@id="usernameTitle"] | //input[@name="loginfmt"] | //input[@id="i0118"] | //input[@name="passwd"]',
+                        60,
+                    )
                     break
-                except Exception:
-                    try:
-                        self.utils.waitUntilVisible(By.ID, "loginHeader", 10)
-                        break
-                    except Exception:  # pylint: disable=broad-except
-                        try:
-                            self.utils.waitUntilVisible(By.ID, "usernameTitle", 10)
-                            break
-                        except Exception:
-                            try:
-                                self.utils.waitUntilVisible(By.NAME, "loginfmt", 10)
-                            except Exception:
-                                attempt += 1
-                                if attempt == 3:
-                                    logging.warning(
-                                        "[LOGIN] Error on find loginHeader e loginHeader... Raising exception | %s",
-                                        self.browser.username,
-                                    )
-                                    raise Exception()
-                                if self.utils.tryDismissAllMessages():
-                                    continue
+                except Exception:  # pylint: disable=broad-except
+                    attempt += 1
+                    if attempt == 3:
+                        logging.warning(
+                            "[LOGIN] Error on find loginHeader e loginHeader... Raising exception | %s",
+                            self.browser.username,
+                        )
+                        raise Exception()
+                    if self.utils.tryDismissAllMessages():
+                        continue
 
         if not alreadyLoggedIn:
             if isLocked := self.executeLogin():
@@ -232,9 +226,16 @@ class Login:
                 return False
 
     def checkBingLogin(self):
-        self.webdriver.get(
-            "https://www.bing.com/fd/auth/signin?action=interactive&provider=windows_live_id&return_url=https%3A%2F%2Fwww.bing.com%2F"
-        )
+        try:
+            self.webdriver.get(
+                "https://www.bing.com/fd/auth/signin?action=interactive&provider=windows_live_id&return_url=https%3A%2F%2Fwww.bing.com%2F"
+            )
+        except Exception:
+            logging.error(
+                f"[ERROR BING] Erro ao verificar login pelo bing... Retrying | {self.browser.username}"
+            )
+            raise Exception()
+
         while True:
             currentUrl = urllib.parse.urlparse(self.webdriver.current_url)
             if currentUrl.hostname == "www.bing.com" and currentUrl.path == "/":

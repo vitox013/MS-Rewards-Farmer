@@ -374,9 +374,13 @@ def save_previous_points_data(data):
 
 
 def process_account(currentAccount, notifier, args, previous_points_data):
-    retries = 3
+    retries = 5
     while retries > 0:
         try:
+            try:
+                cleanup_zombie_processes()
+            except Exception:
+                pass
             earned_points = executeBot(currentAccount, notifier, args)
             account_name = currentAccount.get("username", "")
             previous_points = previous_points_data.get(account_name, 0)
@@ -406,6 +410,10 @@ def process_account(currentAccount, notifier, args, previous_points_data):
             break  # Sair do loop se a execução for bem-sucedida
         except Exception as e:
             retries -= 1
+            try:
+                cleanup_zombie_processes()
+            except Exception:
+                pass
             if retries == 0:
                 notifier.send(
                     "⚠️ Error occurred after 3 attempts, please check the log",

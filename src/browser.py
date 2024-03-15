@@ -234,8 +234,13 @@ class Browser:
     def extrair_ip(self, url):
         # Expressão regular para encontrar o endereço IP
         padrao = r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}"
-        match = re.search(padrao, url)
+        match = None
+        try:
+            match = re.search(padrao, url)
+        except Exception:
+            pass
+
         if match:
             return match.group()
-        else:
-            return None
+
+        return None
