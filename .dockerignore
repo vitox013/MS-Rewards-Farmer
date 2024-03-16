@@ -11,3 +11,8 @@ docker-compose.yml
 .venv
 .devcontainer
 sessions
+*copy.json
+clean_zombie.sh
+log_zombie.txt
+zaccounts_to_resolve.json
+us_accounts.json

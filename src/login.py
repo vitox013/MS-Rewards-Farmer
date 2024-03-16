@@ -52,7 +52,8 @@ class Login:
             if isLocked := self.executeLogin():
                 return "Locked"
         self.utils.tryDismissCookieBanner()
-
+        if self.verify_abuse():
+            raise Exception("Abuso detectado")
         logging.info("[LOGIN] " + "Logged-in !")
 
         self.utils.goHome()
@@ -85,13 +86,15 @@ class Login:
 
         try:
             self.enterPassword(self.browser.password)
-            self.utils.focus_on_login()
-            self.utils.tryDismissAllMessages()
-            self.webdriver.get("https://account.microsoft.com")
         except Exception as e:  # pylint: disable=broad-except
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
+        if self.verify_abuse():
+            raise Exception("Abuso detectado")
+
+        self.utils.focus_on_login()
+        self.utils.tryDismissAllMessages()
 
         while not (
             urllib.parse.urlparse(self.webdriver.current_url).path == "/"
@@ -245,3 +248,14 @@ class Login:
                     if self.utils.checkBingLogin():
                         return
             time.sleep(1)
+
+    def verify_abuse(self):
+        try:
+            self.utils.waitUntilVisible(
+                By.XPATH,
+                "//div[contains(@class, 'serviceAbusePageContainer')]",
+                timeToWait=5,
+            )
+            return True
+        except Exception:
+            pass

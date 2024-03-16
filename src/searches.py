@@ -170,20 +170,21 @@ class Searches:
 
     def bingSearch(self, word: str):
         # Function to perform a single Bing search
-        i = 0
 
         while True:
             try:
+
                 self.browser.utils.waitUntilClickable(By.ID, "sb_form_q")
                 searchbar = self.webdriver.find_element(By.ID, "sb_form_q")
                 searchbar.clear()
+
                 for char in word:
                     searchbar.send_keys(char)
                     delay = random.uniform(0.2, 1)
                     time.sleep(delay)
                 searchbar.submit()
                 time.sleep(self.browser.utils.randomSeconds(120, 220))
-
+                self.browser.utils.tryDismissAllMessages()
                 # Scroll down after the search (adjust the number of scrolls as needed)
                 for _ in range(3):  # Scroll down 3 times
                     self.webdriver.execute_script(
@@ -195,18 +196,13 @@ class Searches:
 
                 return self.browser.utils.getBingAccountPoints()
             except TimeoutException:
-                if i == 10:
-                    logging.error(
-                        "[BING] "
-                        + "Cancelling mobile searches due to too many retries."
-                    )
-                    return self.browser.utils.getBingAccountPoints()
-                self.browser.utils.tryDismissAllMessages()
-                logging.error("[BING] " + "Timeout, retrying in 5~ seconds...")
                 time.sleep(self.browser.utils.randomSeconds(7, 15))
-                i += 1
                 self.webdriver.refresh()
-                continue
+                logging.error(
+                    "[BING] "
+                    + f"Timeout, continuando pra próxima search... | {self.browser.username}"
+                )
+                return self.browser.utils.getBingAccountPoints()
 
     def get_related_terms_with_gpt(self, word: str) -> Optional[List[str]]:
         try:
