@@ -247,11 +247,12 @@ class Utils:
         buttons = [
             (By.ID, "iLandingViewAction"),
             (By.ID, "iShowSkip"),
-            (By.ID, "iNext"),
             (By.ID, "iLooksGood"),
             (By.ID, "idSIButton9"),
-            (By.CSS_SELECTOR, ".ms-Button.ms-Button--primary"),
+            (By.ID, "iCancel"),
             (By.ID, "acceptButton"),
+            (By.ID, "iNext"),
+            (By.CSS_SELECTOR, ".ms-Button.ms-Button--primary"),
             (By.ID, "bnp_btn_accept"),
         ]
         result = False
