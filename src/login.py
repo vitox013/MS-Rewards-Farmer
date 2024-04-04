@@ -15,7 +15,7 @@ class Login:
         self.utils = browser.utils
 
     def login(self, notifier, account):
-        logging.info("[LOGIN] " + "Logging-in...")
+        logging.info("[LOGIN] " + f"Logging-in... | {self.browser.username}")
         self.webdriver.get(
             "https://rewards.bing.com/Signin/"
         )  # changed site to allow bypassing when M$ blocks access to login.live.com randomly
@@ -54,7 +54,7 @@ class Login:
         self.utils.tryDismissCookieBanner()
         if self.verify_abuse():
             raise Exception("Abuso detectado")
-        logging.info("[LOGIN] " + "Logged-in !")
+        logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
         self.utils.goHome()
         points = self.utils.getAccountPoints()
@@ -95,6 +95,12 @@ class Login:
 
         self.utils.focus_on_login()
         self.utils.tryDismissAllMessages()
+
+        try:
+            self.utils.waitUntilVisible(By.XPATH, '//*[@id="authenticatorIntro"]')
+            self.webdriver.find_element(By.XPATH, '//*[@id="iCancel"]').click()
+        except Exception:
+            pass
 
         while not (
             urllib.parse.urlparse(self.webdriver.current_url).path == "/"

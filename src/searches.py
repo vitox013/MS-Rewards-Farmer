@@ -135,7 +135,9 @@ class Searches:
         attempt = 0
         for word in search_terms:
             i += 1
-            logging.info(f"[BING] {i}/{numberOfSearches} | {word}")
+            logging.info(
+                f"[BING] {i}/{numberOfSearches} | {word} | {self.browser.username}"
+            )
             points = self.bingSearch(word)
             if points <= pointsCounter:
                 relatedTerms = self.getRelatedTerms(word)[:1]
@@ -183,7 +185,7 @@ class Searches:
                     delay = random.uniform(0.2, 1)
                     time.sleep(delay)
                 searchbar.submit()
-                time.sleep(self.browser.utils.randomSeconds(120, 220))
+                time.sleep(self.browser.utils.randomSeconds(120, 200))
                 self.browser.utils.tryDismissAllMessages()
                 # Scroll down after the search (adjust the number of scrolls as needed)
                 for _ in range(3):  # Scroll down 3 times
@@ -191,12 +193,12 @@ class Searches:
                         "window.scrollTo(0, document.body.scrollHeight);"
                     )
                     time.sleep(
-                        self.browser.utils.randomSeconds(6, 13)
+                        self.browser.utils.randomSeconds(3, 7)
                     )  # Random wait between scrolls
 
                 return self.browser.utils.getBingAccountPoints()
             except TimeoutException:
-                time.sleep(self.browser.utils.randomSeconds(7, 15))
+                time.sleep(self.browser.utils.randomSeconds(3, 8))
                 self.webdriver.refresh()
                 logging.error(
                     "[BING] "
