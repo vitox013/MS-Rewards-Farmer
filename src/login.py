@@ -53,7 +53,7 @@ class Login:
                 return "Locked"
         self.utils.tryDismissCookieBanner()
         if self.verify_abuse():
-            raise Exception("Abuso detectado")
+            return "Abuse"
         logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
         self.utils.goHome()
@@ -259,7 +259,7 @@ class Login:
         try:
             self.utils.waitUntilVisible(
                 By.XPATH,
-                "//div[contains(@class, 'serviceAbusePageContainer')]",
+                '//div[contains(@class, "serviceAbusePageContainer")] | //*[@id="suspendedAccountHeader"]',
                 timeToWait=5,
             )
             return True

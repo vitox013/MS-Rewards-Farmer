@@ -260,6 +260,9 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
         if startingPoints == "Locked":
             notifier.send("🚫 Account is Locked", currentAccount)
             return 0
+        if startingPoints == "Abuse":
+            notifier.send("🚫 Account BANNED", currentAccount)
+            return 0
         if startingPoints == "Verify":
             notifier.send("❗ Account needs to be verified", currentAccount)
             return 0

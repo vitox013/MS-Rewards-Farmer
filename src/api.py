@@ -30,10 +30,3 @@ def update_points(username, points, points_today):
     data = {"username": username, "points": points, "points_today": points_today}
     response = requests.post(url, json=data)
     return response.json()
-
-
-update_points(
-    "annemuller4@hotmail.com",
-    0,
-    0,
-)
