@@ -24,7 +24,7 @@ from src import (
     Searches,
     VersusGame,
 )
-from src.api import create_account, update_points
+from src.api import create_account, update_points, verify_can_farm
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -49,13 +49,18 @@ def main():
 
     # Processa as contas em loadedAccounts1
     for currentAccount in loadedAccounts:
-        thread = threading.Thread(
-            target=process_account,
-            args=(currentAccount, notifier, args, previous_points_data),
-        )
-        threads.append(thread)
-        thread.start()
-        time.sleep(90)
+        try:
+            can_farm = verify_can_farm(currentAccount.get("username", ""))
+        except Exception:
+            logging.warning("Erro ao verificar se pode farmar na api")
+        if can_farm == 200:
+            thread = threading.Thread(
+                target=process_account,
+                args=(currentAccount, notifier, args, previous_points_data),
+            )
+            threads.append(thread)
+            thread.start()
+            time.sleep(90)
 
     # Aguarda todas as threads de loadedAccounts concluírem
     for thread in threads:

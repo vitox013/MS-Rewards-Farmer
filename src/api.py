@@ -30,3 +30,13 @@ def update_points(username, points, points_today):
     data = {"username": username, "points": points, "points_today": points_today}
     response = requests.post(url, json=data)
     return response.json()
+
+
+def verify_can_farm(username):
+    """
+    Função para saber se a conta pode farmar ou não
+    """
+    url = f"{base_url}get-canfarm"
+    params = {"username": username}
+    response = requests.get(url, params=params)
+    return response.status_code
