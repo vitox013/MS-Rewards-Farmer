@@ -54,6 +54,8 @@ class Login:
         self.utils.tryDismissCookieBanner()
         if self.verify_abuse():
             return "Abuse"
+        if self.verify_unusual_activity():
+            return "Unusual activity"
         logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
         self.utils.goHome()
@@ -90,8 +92,6 @@ class Login:
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
-        if self.verify_abuse():
-            raise Exception("Abuso detectado")
 
         self.utils.focus_on_login()
         self.utils.tryDismissAllMessages()
@@ -261,6 +261,17 @@ class Login:
                 By.XPATH,
                 '//div[contains(@class, "serviceAbusePageContainer")] | //*[@id="suspendedAccountHeader"]',
                 timeToWait=5,
+            )
+            return True
+        except Exception:
+            pass
+
+    def verify_unusual_activity(self):
+        try:
+            self.utils.waitUntilVisible(
+                By.XPATH,
+                '//*[@id="identityPageBanner"]',
+                timeToWait=10,
             )
             return True
         except Exception:
