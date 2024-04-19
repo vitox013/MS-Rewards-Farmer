@@ -52,10 +52,6 @@ class Login:
             if isLocked := self.executeLogin():
                 return "Locked"
         self.utils.tryDismissCookieBanner()
-        if self.verify_abuse():
-            return "Abuse"
-        if self.verify_unusual_activity():
-            return "Unusual activity"
         logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
         self.utils.goHome()
@@ -92,7 +88,8 @@ class Login:
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
-
+        if self.verify_abuse() or self.verify_unusual_activity():
+            return True
         self.utils.focus_on_login()
         self.utils.tryDismissAllMessages()
 
