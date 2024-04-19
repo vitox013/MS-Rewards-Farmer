@@ -53,7 +53,7 @@ def main():
             can_farm = verify_can_farm(currentAccount.get("username", ""))
         except Exception:
             logging.warning("Erro ao verificar se pode farmar na api")
-        if can_farm == 200:
+        if can_farm != 401:
             thread = threading.Thread(
                 target=process_account,
                 args=(currentAccount, notifier, args, previous_points_data),
@@ -61,7 +61,10 @@ def main():
             threads.append(thread)
             thread.start()
             time.sleep(90)
-
+        else:
+            logging.warning(
+                f'{currentAccount.get("username", "")} com STATUS: {can_farm}'
+            )
     # Aguarda todas as threads de loadedAccounts concluírem
     for thread in threads:
         thread.join()
