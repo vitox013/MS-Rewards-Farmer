@@ -51,6 +51,8 @@ class Login:
         if not alreadyLoggedIn:
             status = self.executeLogin()
             if status is not None:
+                if status == "Error_login":
+                    raise Exception()
                 return status
 
         self.utils.tryDismissCookieBanner()
@@ -85,11 +87,12 @@ class Login:
             pass
 
         try:
-            self.enterPassword(self.browser.password)
+            self.enterPassword()
         except Exception as e:  # pylint: disable=broad-except
             logging.error(
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
+            return "Error_login"
         if self.verify_abuse():
             return "Abuse"
         if self.verify_unusual_activity():
@@ -124,16 +127,17 @@ class Login:
             By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 10
         )
 
-    def enterPassword(self, password):
+    def enterPassword(self):
         # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)
         # If password contains special characters like " ' or \, send_keys() will not work
 
         logging.info("[LOGIN] " + "Writing password...")
         # self.webdriver.find_element(By.ID, "idSIButton9").click()
         time.sleep(3)
-
+        attempt = 0
         while True:
-            attempt = 0
+            if attempt == 5:
+                raise Exception()
             pwd_field = self.get_pwd_field()
             if pwd_field:
                 try:
@@ -144,22 +148,19 @@ class Login:
                     time.sleep(5)
                     if not self.click_next():
                         attempt += 1
-                        if attempt == 5:
-                            raise Exception()
                         continue
                     if self.had_error_on_insert_pwd():
                         logging.warning(
                             "[LOGIN] Tentando inserir senha novamente... | %s",
                             self.browser.username,
                         )
+                        attempt += 1
                         continue
                     break
+                attempt += 1
             else:
                 attempt += 1
                 time.sleep(10)
-                if attempt == 5:
-                    raise Exception()
-                continue
 
     def click_next(self):
         with contextlib.suppress(Exception):
