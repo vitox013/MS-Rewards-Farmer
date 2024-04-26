@@ -24,7 +24,7 @@ from src import (
     Searches,
     VersusGame,
 )
-from src.api import create_account, update_points, verify_can_farm
+from src.api import create_account, update_points, update_status, verify_can_farm
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -272,6 +272,10 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
         if startingPoints == "Abuse":
             notifier.send("🚫 Account BANNED", currentAccount)
             logging.error("Account BANNED | %s", currentAccount.get("username", ""))
+            try:
+                update_status(currentAccount.get("username", ""), "BANNED")
+            except Exception as e:
+                logging.warning(f"Erro ao atualizar status na api: {e}")
             return 0
         if startingPoints == "Unusual activity":
             notifier.send("⚠️ Unusual activity", currentAccount)
