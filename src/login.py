@@ -93,12 +93,12 @@ class Login:
                 f"[ERROR] Erro na etapa de inserir password: {self.browser.username} | Error: {e}"
             )
             return "Error_login"
+        self.utils.focus_on_login()
+        self.utils.tryDismissAllMessages()
         if self.verify_abuse():
             return "Abuse"
         if self.verify_unusual_activity():
             return "Unusual activity"
-        self.utils.focus_on_login()
-        self.utils.tryDismissAllMessages()
 
         try:
             self.utils.waitUntilVisible(By.XPATH, '//*[@id="authenticatorIntro"]')
