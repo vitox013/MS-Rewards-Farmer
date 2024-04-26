@@ -40,3 +40,13 @@ def verify_can_farm(username):
     params = {"username": username}
     response = requests.get(url, params=params)
     return response.status_code
+
+
+def update_status(username, status):
+    """
+    Função para atualizar o status da conta
+    """
+    url = f"{base_url}update-status"
+    data = {"username": username, "status": status}
+    response = requests.patch(url, json=data)
+    return response.json()
