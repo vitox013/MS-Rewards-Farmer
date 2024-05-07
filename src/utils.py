@@ -174,9 +174,7 @@ class Utils:
                 dashboard_data = self.webdriver.execute_script("return dashboard")
                 break
             except Exception as e:
-                logging.warning(f"[ERROR] Error getting dashboard data")
                 if attempt < MAX_RETRIES - 1:
-                    logging.warning("[ERROR] Retrying...")
                     self.handle_login()
                     self.handle_base_url_navigation()
                 else:

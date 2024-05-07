@@ -261,7 +261,7 @@ class Login:
         try:
             self.utils.waitUntilVisible(
                 By.XPATH,
-                '//div[contains(@class, "serviceAbusePageContainer")] | //*[@id="suspendedAccountHeader"]',
+                '//div[contains(@class, "serviceAbusePageContainer")] | //*[@id="suspendedAccountHeader"] | //*[@id="serviceAbuseLandingTitle"]',
                 timeToWait=5,
             )
             return True
@@ -272,7 +272,7 @@ class Login:
         try:
             self.utils.waitUntilVisible(
                 By.XPATH,
-                '//*[@id="identityPageBanner"]',
+                '//*[@id="identityPageBanner"] | //*[@id="pageControlHost"]/div',
                 timeToWait=10,
             )
             return True
