@@ -24,7 +24,7 @@ class Login:
         while True:
             try:
                 self.utils.waitUntilVisible(
-                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 14
+                    By.CSS_SELECTOR, 'html[data-role-name="RewardsPortal"]', 20
                 )
                 alreadyLoggedIn = True
                 break
@@ -54,8 +54,16 @@ class Login:
                 if status == "Error_login":
                     raise Exception()
                 return status
+        else:
+            if self.verify_unusual_activity():
+                return "Unusual activity"
+            if self.verify_abuse():
+                return "Locked"
+            if self.verify_ban():
+                return "Abuse"
 
         self.utils.tryDismissCookieBanner()
+
         logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
         self.utils.goHome()
@@ -95,10 +103,12 @@ class Login:
             return "Error_login"
         self.utils.focus_on_login()
         self.utils.tryDismissAllMessages()
-        if self.verify_abuse():
-            return "Abuse"
         if self.verify_unusual_activity():
             return "Unusual activity"
+        if self.verify_abuse():
+            return "Locked"
+        if self.verify_ban():
+            return "Abuse"
 
         try:
             self.utils.waitUntilVisible(By.XPATH, '//*[@id="authenticatorIntro"]')
@@ -261,7 +271,7 @@ class Login:
         try:
             self.utils.waitUntilVisible(
                 By.XPATH,
-                '//div[contains(@class, "serviceAbusePageContainer")] | //*[@id="suspendedAccountHeader"] | //*[@id="serviceAbuseLandingTitle"]',
+                '//*[contains(text(), "Your account has been locked")] | //*[@id="serviceAbuseLandingTitle"]',
                 timeToWait=5,
             )
             return True
@@ -273,7 +283,18 @@ class Login:
             self.utils.waitUntilVisible(
                 By.XPATH,
                 '//*[@id="identityPageBanner"] | //*[@id="pageControlHost"]/div',
-                timeToWait=10,
+                timeToWait=5,
+            )
+            return True
+        except Exception:
+            pass
+
+    def verify_ban(self):
+        try:
+            self.utils.waitUntilVisible(
+                By.XPATH,
+                '//*[@id="suspendedAccountHeader"]',
+                timeToWait=5,
             )
             return True
         except Exception:
