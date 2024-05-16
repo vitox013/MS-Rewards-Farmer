@@ -166,7 +166,7 @@ class Utils:
         return str(t)
 
     def getDashboardData(self) -> dict:
-        time.sleep(15)
+        time.sleep(8)
         dashboard_data = {}
         MAX_RETRIES = 3
         for attempt in range(MAX_RETRIES):
@@ -252,6 +252,7 @@ class Utils:
             (By.ID, "iNext"),
             (By.CSS_SELECTOR, ".ms-Button.ms-Button--primary"),
             (By.ID, "bnp_btn_accept"),
+            (By.ID, "reward_pivot_earn"),
         ]
         result = False
         for button in buttons:

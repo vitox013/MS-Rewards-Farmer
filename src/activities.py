@@ -18,7 +18,7 @@ class Activities:
             By.XPATH,
             f'//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[{cardId}]/div/card-content/mee-rewards-daily-set-item-content/div/a',
         ).click()
-        self.browser.utils.switchToNewTab(8)
+        self.browser.utils.switchToNewTab(4)
 
     def openMorePromotionsActivity(self, cardId: int):
         # Open the More Promotions activity for the given cardId
@@ -26,11 +26,11 @@ class Activities:
             By.XPATH,
             f'//*[@id="more-activities"]/div/mee-card[{cardId}]/div/card-content/mee-rewards-more-activities-card-item/div/a',
         ).click()
-        self.browser.utils.switchToNewTab(8)
+        self.browser.utils.switchToNewTab(5)
 
     def completeSearch(self):
         # Simulate completing a search activity
-        time.sleep(self.browser.utils.randomSeconds(10, 15))
+        time.sleep(self.browser.utils.randomSeconds(4, 7))
         self.browser.utils.closeCurrentTab()
 
     def completeSurvey(self):

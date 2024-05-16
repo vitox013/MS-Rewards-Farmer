@@ -54,19 +54,26 @@ class Login:
                 if status == "Error_login":
                     raise Exception()
                 return status
-        else:
-            if self.verify_unusual_activity():
-                return "Unusual activity"
-            if self.verify_abuse():
-                return "Locked"
-            if self.verify_ban():
-                return "Abuse"
+
+        if self.verify_unusual_activity():
+            return "Unusual activity"
+        if self.verify_abuse():
+            return "Locked"
+        if self.verify_ban():
+            return "Abuse"
+
+        try:
+            self.utils.waitUntilVisible(By.XPATH, '//*[@id="reward_pivot_earn"]', 10)
+            self.webdriver.find_element(
+                By.XPATH, '//*[@id="reward_pivot_earn"]'
+            ).click()
+        except Exception:
+            pass
 
         self.utils.tryDismissCookieBanner()
 
         logging.info("[LOGIN] " + f"Logged-in ! | {self.browser.username}")
 
-        self.utils.goHome()
         points = self.utils.getAccountPoints()
 
         logging.info("[LOGIN] " + "Ensuring you are logged into Bing...")
@@ -103,12 +110,6 @@ class Login:
             return "Error_login"
         self.utils.focus_on_login()
         self.utils.tryDismissAllMessages()
-        if self.verify_unusual_activity():
-            return "Unusual activity"
-        if self.verify_abuse():
-            return "Locked"
-        if self.verify_ban():
-            return "Abuse"
 
         try:
             self.utils.waitUntilVisible(By.XPATH, '//*[@id="authenticatorIntro"]')
@@ -116,26 +117,12 @@ class Login:
         except Exception:
             pass
 
-        while not (
-            urllib.parse.urlparse(self.webdriver.current_url).path == "/"
-            and urllib.parse.urlparse(self.webdriver.current_url).hostname
-            == "account.microsoft.com"
-        ):
-            if (
-                urllib.parse.urlparse(self.webdriver.current_url).hostname
-                == "rewards.bing.com"
-            ):
-                self.webdriver.get("https://account.microsoft.com")
-
-            if "Abuse" in str(self.webdriver.current_url):
-                logging.error(f"[LOGIN] {self.browser.username} is locked")
-                return "Locked"
-            self.utils.tryDismissAllMessages()
-            time.sleep(1)
-
-        self.utils.waitUntilVisible(
-            By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 10
-        )
+        try:
+            self.utils.waitUntilVisible(
+                By.CSS_SELECTOR, 'html[data-role-name="MeePortal"]', 10
+            )
+        except Exception:
+            pass
 
     def enterPassword(self):
         # browser.webdriver.find_element(By.NAME, "passwd").send_keys(password)

@@ -293,7 +293,7 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
             logging.warning(f"Erro ao criar na api: {e}")
             pass
         DailySet(desktopBrowser).completeDailySet()
-        PunchCards(desktopBrowser).completePunchCards()
+        # PunchCards(desktopBrowser).completePunchCards()
         MorePromotions(desktopBrowser).completeMorePromotions()
         # VersusGame(desktopBrowser).completeVersusGame()
         (

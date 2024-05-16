@@ -13,7 +13,7 @@ class MorePromotions:
     def completeMorePromotions(self):
         # Function to complete More Promotions
         logging.info("[MORE PROMOS] " + "Trying to complete More Promotions...")
-        self.browser.utils.goHome()
+        # self.browser.utils.goHome()
         morePromotions = self.browser.utils.getDashboardData()["morePromotions"]
         i = 0
         for promotion in morePromotions:
