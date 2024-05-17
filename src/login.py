@@ -39,6 +39,12 @@ class Login:
                     break
                 except Exception:  # pylint: disable=broad-except
                     attempt += 1
+                    if self.verify_unusual_activity():
+                        return "Unusual activity"
+                    if self.verify_abuse():
+                        return "Locked"
+                    if self.verify_ban():
+                        return "Abuse"
                     if attempt == 3:
                         logging.warning(
                             "[LOGIN] Error on find loginHeader e loginHeader... Raising exception | %s",
