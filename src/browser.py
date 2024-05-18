@@ -1,5 +1,6 @@
 import contextlib
 import logging
+import os
 import random
 import re
 from pathlib import Path
@@ -69,9 +70,7 @@ class Browser:
         options.add_argument(f"--lang={self.localeLang}-{self.localeGeo}")
         options.add_experimental_option(
             "prefs",
-            {
-                "intl.accept_languages": f"{self.localeLang},{self.localeLang}-{self.localeGeo}"
-            },
+            {"intl.accept_languages": f"{self.localeLang},{self.localeLang}-{self.localeGeo}"},
         )
 
         # Reduzindo argumentos desnecessários
@@ -91,6 +90,13 @@ class Browser:
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--disable-features=PrivacySandboxSettings4")
+        preferences = {
+            "webrtc.ip_handling_policy": "disable_non_proxied_udp",
+            "webrtc.multiple_routes_enabled": False,
+            "webrtc.nonproxied_udp_enabled": False,
+        }
+
+        options.add_experimental_option("prefs", preferences)
 
         seleniumwireOptions: dict[str, Any] = {"verify_ssl": False}
 
@@ -184,9 +190,7 @@ class Browser:
 
         driver.execute_cdp_cmd(
             "Page.addScriptToEvaluateOnNewDocument",
-            {
-                "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-            },
+            {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
         )
 
         return driver
