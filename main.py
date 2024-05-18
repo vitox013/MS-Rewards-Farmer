@@ -374,11 +374,12 @@ def process_account(currentAccount, notifier, args, previous_points_data):
             # Update the previous day's points data
             previous_points_data[account_name] = earned_points
             try:
-                update_points(
-                    currentAccount.get("username", ""),
-                    earned_points,
-                    points_difference,
-                )
+                if earned_points:
+                    update_points(
+                        currentAccount.get("username", ""),
+                        earned_points,
+                        points_difference,
+                    )
             except Exception:
                 logging.warning("Erro ao atualizar na api")
                 pass
