@@ -3,7 +3,7 @@ import json
 import requests
 
 # Base URL
-base_url = "http://172.21.0.2:3143/accounts/"
+base_url = "http://api:3143/accounts/"
 
 
 def create_account(username, points):
