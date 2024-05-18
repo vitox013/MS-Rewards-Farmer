@@ -1,5 +1,7 @@
 import json
+import os
 
+import pymongo
 import requests
 
 # Base URL
@@ -50,3 +52,18 @@ def update_status(username, status):
     data = {"username": username, "status": status}
     response = requests.patch(url, json=data)
     return response.json()
+
+
+def get_accounts_from_mongo():
+    """
+    Função para pegar todas as contas do MongoDB
+    """
+    client = pymongo.MongoClient("mongodb://api:27018/")
+    db = client["test"]
+    collection = db["accounts"]
+    vps = int(os.getenv("VPS", "0"))
+    json_account = int(os.getenv("JSON", "0"))
+    accounts = list(
+        collection.find({"vps": vps, "json_account": json_account, "status": "LIVE", "points": {"$lt": 6500}})
+    )
+    return accounts
