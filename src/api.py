@@ -5,7 +5,7 @@ import pymongo
 import requests
 
 # Base URL
-base_url = "http://api:3143/accounts/"
+base_url = "http://100.68.152.79:3143/accounts/"
 
 
 def create_account(username, points):
