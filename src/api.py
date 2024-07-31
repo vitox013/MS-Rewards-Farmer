@@ -63,7 +63,13 @@ def get_accounts_from_mongo():
     collection = db["accounts"]
     vps = int(os.getenv("VPS", "0"))
     json_account = int(os.getenv("JSON", "0"))
-    accounts = list(
-        collection.find({"vps": vps, "json_account": json_account, "status": "LIVE", "points": {"$lt": 6500}})
-    )
-    return accounts
+
+    pipeline = [
+        {"$match": {"vps": vps, "json_account": json_account, "status": "LIVE", "points": {"$lt": 6500}}},
+        {"$lookup": {"from": "proxies", "localField": "proxy", "foreignField": "_id", "as": "proxy_details"}},
+        {"$unwind": "$proxy_details"},  # Descompactar o array de proxy_details
+        {"$addFields": {"proxy": "$proxy_details.proxy"}},  # Substituir o campo proxy
+        {"$project": {"proxy_details": 0}},  # Remover o campo proxy_details
+    ]
+
+    return list(collection.aggregate(pipeline))
