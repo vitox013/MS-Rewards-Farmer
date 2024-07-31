@@ -59,7 +59,7 @@ def get_accounts_from_mongo():
     Função para pegar todas as contas do MongoDB
     """
     client = pymongo.MongoClient("mongodb://100.68.152.79:27018/")
-    db = client["test"]
+    db = client["mstools"]
     collection = db["accounts"]
     vps = int(os.getenv("VPS", "0"))
     json_account = int(os.getenv("JSON", "0"))
