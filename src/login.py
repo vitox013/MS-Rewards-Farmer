@@ -275,7 +275,7 @@ class Login:
         try:
             self.utils.waitUntilVisible(
                 By.XPATH,
-                '//*[@id="identityPageBanner"] | //*[@id="pageControlHost"]/div',
+                '//*[contains(text(), "atividade incomum")]',
                 timeToWait=5,
             )
             return True
