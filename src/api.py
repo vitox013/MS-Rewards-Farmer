@@ -69,7 +69,7 @@ def get_accounts_from_mongo():
             "$match": {
                 "vps": vps,
                 "json_account": json_account,
-                "status": "LIVE",
+                "status": {"$in": ["LIVE", "WAITING"]},
                 "points": {"$lt": 6500},
             }
         },
