@@ -21,15 +21,15 @@ def create_account(username, points):
     return response.json()
 
 
-def update_points(username, points, points_today):
+def update_points(_id, points, points_today):
     """
     Função para atualizar os pontos de uma conta.
-    :param username: Nome de usuário da conta a ser atualizada.
+    :param _id: Nome de usuário da conta a ser atualizada.
     :param points: Novos pontos da conta.
     :return: Resposta da requisição.
     """
     url = f"{base_url}update-points"
-    data = {"username": username, "points": points, "points_today": points_today}
+    data = {"_id": _id, "points": points, "points_today": points_today}
     response = requests.post(url, json=data)
     return response.json()
 
@@ -44,12 +44,12 @@ def verify_can_farm(username):
     return response.status_code
 
 
-def update_status(username, status):
+def update_status(_id, status):
     """
     Função para atualizar o status da conta
     """
     url = f"{base_url}update-status"
-    data = {"username": username, "status": status}
+    data = {"_id": _id, "status": status}
     response = requests.patch(url, json=data)
     return response.json()
 
@@ -105,3 +105,6 @@ def get_accounts_from_mongo():
 
     accounts = list(collection.aggregate(pipeline))
     return accounts
+
+
+get_accounts_from_mongo()

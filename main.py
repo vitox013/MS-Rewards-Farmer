@@ -15,8 +15,22 @@ from pathlib import Path
 import pandas as pd
 import psutil
 
-from src import Browser, DailySet, Login, MorePromotions, PunchCards, Searches, VersusGame
-from src.api import create_account, get_accounts_from_mongo, update_points, update_status, verify_can_farm
+from src import (
+    Browser,
+    DailySet,
+    Login,
+    MorePromotions,
+    PunchCards,
+    Searches,
+    VersusGame,
+)
+from src.api import (
+    create_account,
+    get_accounts_from_mongo,
+    update_points,
+    update_status,
+    verify_can_farm,
+)
 from src.loggingColoredFormatter import ColoredFormatter
 from src.notifier import Notifier
 from src.utils import Utils
@@ -145,9 +159,13 @@ def cleanup_zombie_processes():
                 # Wait for the process to terminate and check if it's gone
                 gone, alive = psutil.wait_procs([process], timeout=3)
                 if process in gone:
-                    logging.info(f"Process {process_info['pid']} ({process_info['name']}) was terminated.")
+                    logging.info(
+                        f"Process {process_info['pid']} ({process_info['name']}) was terminated."
+                    )
                 else:
-                    logging.info(f"Failed to terminate process {process_info['pid']} ({process_info['name']}).")
+                    logging.info(
+                        f"Failed to terminate process {process_info['pid']} ({process_info['name']})."
+                    )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 # Ignore if the process does not exist or access is denied
                 pass
@@ -155,9 +173,15 @@ def cleanup_zombie_processes():
 
 def argumentParser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="MS Rewards Farmer")
-    parser.add_argument("-v", "--visible", action="store_true", help="Optional: Visible browser")
-    parser.add_argument("-l", "--lang", type=str, default=None, help="Optional: Language (ex: en)")
-    parser.add_argument("-g", "--geo", type=str, default=None, help="Optional: Geolocation (ex: US)")
+    parser.add_argument(
+        "-v", "--visible", action="store_true", help="Optional: Visible browser"
+    )
+    parser.add_argument(
+        "-l", "--lang", type=str, default=None, help="Optional: Language (ex: en)"
+    )
+    parser.add_argument(
+        "-g", "--geo", type=str, default=None, help="Optional: Geolocation (ex: US)"
+    )
     parser.add_argument(
         "-p",
         "--proxy",
@@ -208,7 +232,9 @@ def setupAccounts() -> list:
     accountPath = Path(__file__).resolve().parent / "accounts.json"
     if not accountPath.exists():
         accountPath.write_text(
-            json.dumps([{"username": "Your Email", "password": "Your Password"}], indent=4),
+            json.dumps(
+                [{"username": "Your Email", "password": "Your Password"}], indent=4
+            ),
             encoding="utf-8",
         )
         noAccountsNotice = """
@@ -227,7 +253,9 @@ def setupAccounts() -> list:
 
 
 def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
-    logging.info(f'********************{ currentAccount.get("username", "") }********************')
+    logging.info(
+        f'********************{ currentAccount.get("username", "") }********************'
+    )
     accountPointsCounter = 0
     remainingSearches = 0
     remainingSearchesM = 0
@@ -252,7 +280,7 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
 
             if status:
                 try:
-                    update_status(currentAccount.get("username", ""), status)
+                    update_status(currentAccount.get("_id", ""), status)
                 except Exception as e:
                     logging.warning("Erro ao atualizar status na api: %s", e)
 
@@ -260,7 +288,8 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
             logging.error("%s | %s", message, currentAccount.get("username", ""))
             return 0
         logging.info(
-            "[POINTS] You have %s points on your account", desktopBrowser.utils.formatNumber(accountPointsCounter)
+            "[POINTS] You have %s points on your account",
+            desktopBrowser.utils.formatNumber(accountPointsCounter),
         )
         # PunchCards(desktopBrowser).completePunchCards()
         MorePromotions(desktopBrowser).completeMorePromotions()
@@ -271,13 +300,19 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
         ) = desktopBrowser.utils.getRemainingSearches()
 
         # Introduce random pauses before and after searches
-        pause_before_search = random.uniform(11.0, 15.0)  # Random pause between 11 to 15 seconds
+        pause_before_search = random.uniform(
+            11.0, 15.0
+        )  # Random pause between 11 to 15 seconds
         time.sleep(pause_before_search)
 
         if remainingSearches != 0:
-            accountPointsCounter = Searches(desktopBrowser).bingSearches(remainingSearches)
+            accountPointsCounter = Searches(desktopBrowser).bingSearches(
+                remainingSearches
+            )
 
-        pause_after_search = random.uniform(11.0, 15.0)  # Random pause between 11 to 15 seconds
+        pause_after_search = random.uniform(
+            11.0, 15.0
+        )  # Random pause between 11 to 15 seconds
         time.sleep(pause_after_search)
 
         desktopBrowser.utils.goHome()
@@ -289,7 +324,9 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
         desktopBrowser.closeBrowser()
         with Browser(mobile=True, account=currentAccount, args=args) as mobileBrowser:
             accountPointsCounter = Login(mobileBrowser).login(notifier, currentAccount)
-            accountPointsCounter = Searches(mobileBrowser).bingSearches(remainingSearchesM)
+            accountPointsCounter = Searches(mobileBrowser).bingSearches(
+                remainingSearchesM
+            )
 
             mobileBrowser.utils.goHome()
             goalPoints = mobileBrowser.utils.getGoalPoints()
@@ -299,7 +336,9 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
     logging.info(
         f"[POINTS] You have earned {desktopBrowser.utils.formatNumber(accountPointsCounter - startingPoints)} points today !"
     )
-    logging.info(f"[POINTS] You are now at {desktopBrowser.utils.formatNumber(accountPointsCounter)} points !")
+    logging.info(
+        f"[POINTS] You are now at {desktopBrowser.utils.formatNumber(accountPointsCounter)} points !"
+    )
     goalNotifier = ""
     if goalPoints > 0:
         logging.info(
@@ -376,7 +415,7 @@ def process_account(currentAccount, notifier, args, previous_points_data):
             try:
                 if earned_points:
                     update_points(
-                        currentAccount.get("username", ""),
+                        currentAccount.get("_id", ""),
                         earned_points,
                         points_difference,
                     )
