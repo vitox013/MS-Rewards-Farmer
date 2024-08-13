@@ -65,11 +65,43 @@ def get_accounts_from_mongo():
     json_account = int(os.getenv("JSON", "0"))
 
     pipeline = [
-        {"$match": {"vps": vps, "json_account": json_account, "status": "LIVE", "points": {"$lt": 6500}}},
-        {"$lookup": {"from": "proxies", "localField": "proxy", "foreignField": "_id", "as": "proxy_details"}},
-        {"$unwind": "$proxy_details"},  # Descompactar o array de proxy_details
-        {"$addFields": {"proxy": "$proxy_details.proxy"}},  # Substituir o campo proxy
-        {"$project": {"proxy_details": 0}},  # Remover o campo proxy_details
+        {
+            "$match": {
+                "vps": vps,
+                "json_account": json_account,
+                "status": "LIVE",
+                "points": {"$lt": 6500},
+            }
+        },
+        {
+            "$lookup": {
+                "from": "proxies",
+                "localField": "proxy",
+                "foreignField": "_id",
+                "as": "proxy_details",
+            },
+        },
+        {
+            "$lookup": {
+                "from": "emails",
+                "localField": "email",
+                "foreignField": "_id",
+                "as": "email",
+            }
+        },
+        {"$unwind": "$proxy_details"},
+        {"$unwind": "$email"},
+        {
+            "$addFields": {
+                "proxy": "$proxy_details.proxy",
+                "username": "$email.username",
+                "password": "$email.password",
+            }
+        },
+        {
+            "$project": {"proxy_details": 0, "email": 0},
+        },  # Remover o campo proxy_details
     ]
 
-    return list(collection.aggregate(pipeline))
+    accounts = list(collection.aggregate(pipeline))
+    return accounts
