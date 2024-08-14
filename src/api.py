@@ -29,6 +29,7 @@ def update_points(_id, points, points_today):
     :return: Resposta da requisição.
     """
     url = f"{base_url}update-points"
+    _id = str(_id)
     data = {"_id": _id, "points": points, "points_today": points_today}
     response = requests.post(url, json=data)
     return response.json()
@@ -49,6 +50,7 @@ def update_status(_id, status):
     Função para atualizar o status da conta
     """
     url = f"{base_url}update-status"
+    _id = str(_id)
     data = {"_id": _id, "status": status}
     response = requests.patch(url, json=data)
     return response.json()
