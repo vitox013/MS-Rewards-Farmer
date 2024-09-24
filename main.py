@@ -291,7 +291,8 @@ def executeBot(currentAccount, notifier: Notifier, args: argparse.Namespace):
             "[POINTS] You have %s points on your account",
             desktopBrowser.utils.formatNumber(accountPointsCounter),
         )
-        # PunchCards(desktopBrowser).completePunchCards()
+        DailySet(desktopBrowser).completeDailySet()
+        PunchCards(desktopBrowser).completePunchCards()
         MorePromotions(desktopBrowser).completeMorePromotions()
         # VersusGame(desktopBrowser).completeVersusGame()
         (
